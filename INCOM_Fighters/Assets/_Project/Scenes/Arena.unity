@@ -246,6 +246,73 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 50, y: -30, z: 0}
+--- !u!1 &516862633
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 516862634}
+  - component: {fileID: 516862636}
+  - component: {fileID: 516862635}
+  m_Layer: 7
+  m_Name: Hurtbox
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &516862634
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 516862633}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1557106260}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &516862635
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 516862633}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0e9df96094e189f49b0a40795acd58e0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Hurtbox
+  health: {fileID: 1557106263}
+--- !u!65 &516862636
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 516862633}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 1
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 0.9, y: 1.6, z: 0.9}
+  m_Center: {x: 0, y: 0.8, z: 0}
 --- !u!1001 &832331781
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -322,6 +389,12 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 1909744818002174, guid: c7cebe2178705794aa9a9911f182d8c1, type: 3}
       insertIndex: -1
       addedObject: {fileID: 832331785}
+    - targetCorrespondingSourceObject: {fileID: 1909744818002174, guid: c7cebe2178705794aa9a9911f182d8c1, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 832331790}
+    - targetCorrespondingSourceObject: {fileID: 1909744818002174, guid: c7cebe2178705794aa9a9911f182d8c1, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 832331789}
   m_SourcePrefab: {fileID: 100100000, guid: c7cebe2178705794aa9a9911f182d8c1, type: 3}
 --- !u!1 &832331782 stripped
 GameObject:
@@ -413,6 +486,38 @@ MonoBehaviour:
   m_DefaultActionMap: Fighter
   m_SplitScreenIndex: -1
   m_Camera: {fileID: 0}
+--- !u!114 &832331789
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 832331782}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e4e43228ec6c17c44b888f8f72375ff5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::FighterCombat
+  lightAttack: {fileID: 11400000, guid: 1418f67c4e0f81b42afcf47d899f8d8a, type: 2}
+  heavyAttack: {fileID: 11400000, guid: 6f9d32e486f897d4fbc863ce444c2e51, type: 2}
+  animator: {fileID: 832331783}
+  locomotionState: Locomotion
+  crossFade: 0.05
+--- !u!114 &832331790
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 832331782}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b4fc62f748a23854b94d9eda7479bd5a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Hitbox
+  hurtboxLayers:
+    serializedVersion: 2
+    m_Bits: 128
 --- !u!1 &988677980
 GameObject:
   m_ObjectHideFlags: 0
@@ -742,11 +847,20 @@ PrefabInstance:
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
-    m_AddedGameObjects: []
+    m_AddedGameObjects:
+    - targetCorrespondingSourceObject: {fileID: 8751161469425723191, guid: 413a1d22819f431ebb3ff91a05364000, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 516862634}
     m_AddedComponents:
     - targetCorrespondingSourceObject: {fileID: 8230766273605467533, guid: 413a1d22819f431ebb3ff91a05364000, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1557106261}
+    - targetCorrespondingSourceObject: {fileID: 8230766273605467533, guid: 413a1d22819f431ebb3ff91a05364000, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1557106263}
+    - targetCorrespondingSourceObject: {fileID: 8230766273605467533, guid: 413a1d22819f431ebb3ff91a05364000, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1557106262}
   m_SourcePrefab: {fileID: 100100000, guid: 413a1d22819f431ebb3ff91a05364000, type: 3}
 --- !u!1 &1557106259 stripped
 GameObject:
@@ -772,6 +886,31 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Pushbox
   halfWidth: 0.55
   height: 1.6
+--- !u!114 &1557106262
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1557106259}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cc2aae133c403dc45821fd1c9a6956f2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DamageLogger
+--- !u!114 &1557106263
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1557106259}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 79b049958acc372409e1b434e0d95de0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Health
+  max: 100
 --- !u!1 &2023974024
 GameObject:
   m_ObjectHideFlags: 0

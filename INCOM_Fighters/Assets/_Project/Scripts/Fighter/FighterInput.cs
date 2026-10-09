@@ -13,6 +13,13 @@ public class FighterInput : MonoBehaviour
     [SerializeField, Range(0f, 0.9f)] float deadZone = 0.4f; // SFIDA S1: dead zone regolabile
 
     InputAction moveAction;
+    InputAction lightAction;
+    InputAction heavyAction;
+
+    // Le pressioni arrivano in Update, ma il combattimento le usa in FixedUpdate:
+    // restano "in attesa" finché qualcuno non le consuma.
+    bool lightQueued;
+    bool heavyQueued;
 
     /// <summary>Direzione orizzontale nel mondo: -1 sinistra, 0 fermo, +1 destra.</summary>
     public float Horizontal { get; private set; }
@@ -22,6 +29,8 @@ public class FighterInput : MonoBehaviour
         // PlayerInput crea una copia dell'asset per ogni giocatore: si leggono le azioni da lì.
         InputActionAsset actions = GetComponent<PlayerInput>().actions;
         moveAction = actions.FindAction("Move", throwIfNotFound: true);
+        lightAction = actions.FindAction("LightPunch", throwIfNotFound: true);
+        heavyAction = actions.FindAction("HeavyPunch", throwIfNotFound: true);
     }
 
     void Update()
@@ -30,5 +39,24 @@ public class FighterInput : MonoBehaviour
 
         // In un picchiaduro la camminata è digitale: o si cammina a velocità piena o si sta fermi.
         Horizontal = Mathf.Abs(x) < deadZone ? 0f : Mathf.Sign(x);
+
+        if (lightAction.WasPressedThisFrame()) lightQueued = true;
+        if (heavyAction.WasPressedThisFrame()) heavyQueued = true;
+    }
+
+    /// <summary>True una sola volta per ogni pressione del pugno leggero.</summary>
+    public bool ConsumeLight()
+    {
+        bool pressed = lightQueued;
+        lightQueued = false;
+        return pressed;
+    }
+
+    /// <summary>True una sola volta per ogni pressione del pugno pesante.</summary>
+    public bool ConsumeHeavy()
+    {
+        bool pressed = heavyQueued;
+        heavyQueued = false;
+        return pressed;
     }
 }

@@ -226,7 +226,7 @@ public static class Sessione1Setup
         movementSO.ApplyModifiedPropertiesWithoutUndo();
 
         // Camera laterale
-        Camera cam = Camera.main != null ? Camera.main : Object.FindFirstObjectByType<Camera>();
+        Camera cam = Camera.main != null ? Camera.main : Object.FindAnyObjectByType<Camera>();
         cam.transform.SetPositionAndRotation(new Vector3(0f, 1.2f, -7f), Quaternion.identity);
         cam.fieldOfView = 30f;
         var fightCamera = cam.gameObject.AddComponent<FightCamera>();
