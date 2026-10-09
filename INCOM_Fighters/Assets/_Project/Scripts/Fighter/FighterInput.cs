@@ -9,26 +9,22 @@ using UnityEngine.InputSystem;
 [RequireComponent(typeof(PlayerInput))]
 public class FighterInput : MonoBehaviour
 {
-    [Tooltip("Sotto questo valore lo stick è considerato fermo.")]
-    [SerializeField, Range(0f, 0.9f)] float deadZone = 0.4f; // SFIDA S1: dead zone regolabile
-
-    InputAction moveAction;
+    // TODO 3a: dichiara un campo privato di tipo InputAction per l'azione Move.
 
     /// <summary>Direzione orizzontale nel mondo: -1 sinistra, 0 fermo, +1 destra.</summary>
     public float Horizontal { get; private set; }
 
     void Awake()
     {
-        // PlayerInput crea una copia dell'asset per ogni giocatore: si leggono le azioni da lì.
-        InputActionAsset actions = GetComponent<PlayerInput>().actions;
-        moveAction = actions.FindAction("Move", throwIfNotFound: true);
+        // TODO 3b: prendi le azioni del giocatore con GetComponent<PlayerInput>().actions
+        //   e salva nel campo l'azione "Move" con FindAction("Move", throwIfNotFound: true).
+        //   PlayerInput crea una copia delle azioni per ogni giocatore: vanno cercate lì, non nell'asset.
     }
 
     void Update()
     {
-        float x = moveAction.ReadValue<float>();
-
-        // In un picchiaduro la camminata è digitale: o si cammina a velocità piena o si sta fermi.
-        Horizontal = Mathf.Abs(x) < deadZone ? 0f : Mathf.Sign(x);
+        // TODO 3c: leggi Move come float con ReadValue<float>().
+        //   In un picchiaduro la camminata è digitale: si cammina a velocità piena o si sta fermi.
+        //   Se il valore assoluto è sotto 0.5, Horizontal = 0; altrimenti Horizontal = Mathf.Sign(valore).
     }
 }

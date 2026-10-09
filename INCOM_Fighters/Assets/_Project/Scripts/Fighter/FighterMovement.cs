@@ -13,9 +13,9 @@ public class FighterMovement : MonoBehaviour
     [SerializeField] ArenaBounds arena;
     [SerializeField] Animator animator;
 
-    [Header("Velocità (m/s)")]
-    [SerializeField] float forwardSpeed = 2.2f;
-    [SerializeField] float backSpeed = 1.7f; // SFIDA S1: all'indietro si cammina più piano
+    [Header("Movimento")]
+    [Tooltip("Velocità di camminata in m/s.")]
+    [SerializeField] float walkSpeed = 2f;
 
     [Header("Animazione")]
     [Tooltip("Tempo di smorzamento del parametro MoveX: evita scatti tra Idle e camminata.")]
@@ -43,49 +43,43 @@ public class FighterMovement : MonoBehaviour
 
     void Update()
     {
-        UpdateFacing();
+        // TODO 6a: chiama UpdateFacing() per girarti verso l'avversario.
 
-        // Direzione relativa all'avversario: +1 avanti, -1 indietro, 0 fermo.
-        float relative = input.Horizontal * Facing;
-        float speed = relative >= 0f ? forwardSpeed : backSpeed;
+        // TODO 4a: sposta il combattente lungo X.
+        //   - parti da una copia di transform.position
+        //   - aggiungi a x: input.Horizontal * walkSpeed * Time.deltaTime
+        //   - limita x con ClampToArena(...)
+        //   - (passo 7) limita x anche con ResolvePushbox(...)
+        //   - forza z a 0: siamo in 2.5D
+        //   - riassegna transform.position
 
-        Vector3 pos = transform.position;
-        pos.x += input.Horizontal * speed * Time.deltaTime;
-        pos.x = ClampToArena(pos.x);
-        pos.x = ResolvePushbox(pos.x);
-        pos.z = 0f; // l'asse Z è bloccato: siamo in 2.5D
-        transform.position = pos;
-
-        // Il blend tree Locomotion usa MoveX: -1 WalkBack, 0 Idle, +1 WalkFwd.
-        animator.SetFloat(MoveXHash, relative, animDamping, Time.deltaTime);
+        // TODO 6c: aggiorna il parametro MoveX dell'Animator con lo smorzamento:
+        //   animator.SetFloat(MoveXHash, valore, animDamping, Time.deltaTime)
+        //   Il valore deve essere +1 quando cammini VERSO l'avversario e -1 quando ti allontani,
+        //   da qualunque lato dello schermo tu sia. Ti servono input.Horizontal e Facing.
     }
 
     void UpdateFacing()
     {
-        if (opponent == null) return;
-
-        float dx = opponent.position.x - transform.position.x;
-        if (Mathf.Abs(dx) > 0.01f) Facing = Mathf.Sign(dx);
-
-        // Il modello guarda lungo +Z: lo ruotiamo verso +X o -X.
-        transform.rotation = Quaternion.LookRotation(Vector3.right * Facing, Vector3.up);
+        // TODO 6b: se opponent esiste, calcola dx = x dell'avversario - x del combattente.
+        //   Se |dx| > 0.01, Facing = Mathf.Sign(dx).
+        //   Poi ruota il personaggio (il modello guarda lungo +Z) verso +X o -X:
+        //   transform.rotation = Quaternion.LookRotation(Vector3.right * Facing, Vector3.up);
     }
 
     float ClampToArena(float x)
     {
-        if (arena == null) return x;
-        return Mathf.Clamp(x, arena.MinX + pushbox.HalfWidth, arena.MaxX - pushbox.HalfWidth);
+        // TODO 4b: se arena esiste, restituisci x limitato (Mathf.Clamp) tra
+        //   arena.MinX + pushbox.HalfWidth  e  arena.MaxX - pushbox.HalfWidth.
+        return x;
     }
 
     float ResolvePushbox(float x)
     {
-        if (opponentPushbox == null) return x;
-
-        // I due centri devono restare ad almeno questa distanza.
-        float minDistance = pushbox.HalfWidth + opponentPushbox.HalfWidth;
-        float ox = opponent.position.x;
-
-        // Chi guarda a destra sta a sinistra dell'avversario, e viceversa.
-        return Facing > 0f ? Mathf.Min(x, ox - minDistance) : Mathf.Max(x, ox + minDistance);
+        // TODO 7: se opponentPushbox esiste, i centri dei due combattenti devono restare
+        //   ad almeno pushbox.HalfWidth + opponentPushbox.HalfWidth di distanza.
+        //   Se guardi a destra (Facing > 0) sei a sinistra dell'avversario: x non può superare
+        //   opponent.position.x meno quella distanza. Se guardi a sinistra vale il contrario.
+        return x;
     }
 }
