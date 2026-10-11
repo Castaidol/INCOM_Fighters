@@ -1,7 +1,7 @@
 using UnityEngine;
 
 /// <summary>
-/// Un attacco descritto come dati: tempi in frame (60 al secondo), hitbox e danno.
+/// Un attacco descritto come dati: tempi in frame (60 al secondo), hitbox, danno e reazione di chi lo subisce.
 /// Lo stesso asset funziona con qualsiasi set di animazioni: dell'Animator conosce solo il nome dello stato.
 /// </summary>
 [CreateAssetMenu(menuName = "INCOM Fighters/Attack Data", fileName = "NuovoAttacco")]
@@ -24,6 +24,10 @@ public class AttackData : ScriptableObject
 
     [Header("Effetto")]
     [Min(0)] public int damage = 5;
+    [Tooltip("Frame in cui chi viene colpito resta bloccato nella reazione.")]
+    [Min(0)] public int hitstun = 16;
+    [Tooltip("Metri di cui chi viene colpito arretra.")]
+    [Min(0f)] public float knockback = 0.15f;
 
     /// <summary>Durata totale dell'attacco in frame.</summary>
     public int TotalFrames => startup + active + recovery;

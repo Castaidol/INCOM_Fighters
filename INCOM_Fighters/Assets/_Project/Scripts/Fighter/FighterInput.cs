@@ -15,11 +15,13 @@ public class FighterInput : MonoBehaviour
     InputAction moveAction;
     InputAction lightAction;
     InputAction heavyAction;
+    InputAction resetAction;
 
     // Le pressioni arrivano in Update, ma il combattimento le usa in FixedUpdate:
     // restano "in attesa" finché qualcuno non le consuma.
     bool lightQueued;
     bool heavyQueued;
+    bool resetQueued;
 
     /// <summary>Direzione orizzontale nel mondo: -1 sinistra, 0 fermo, +1 destra.</summary>
     public float Horizontal { get; private set; }
@@ -31,6 +33,7 @@ public class FighterInput : MonoBehaviour
         moveAction = actions.FindAction("Move", throwIfNotFound: true);
         lightAction = actions.FindAction("LightPunch", throwIfNotFound: true);
         heavyAction = actions.FindAction("HeavyPunch", throwIfNotFound: true);
+        resetAction = actions.FindAction("Reset", throwIfNotFound: true);
     }
 
     void Update()
@@ -42,6 +45,7 @@ public class FighterInput : MonoBehaviour
 
         if (lightAction.WasPressedThisFrame()) lightQueued = true;
         if (heavyAction.WasPressedThisFrame()) heavyQueued = true;
+        if (resetAction.WasPressedThisFrame()) resetQueued = true;
     }
 
     /// <summary>True una sola volta per ogni pressione del pugno leggero.</summary>
@@ -57,6 +61,14 @@ public class FighterInput : MonoBehaviour
     {
         bool pressed = heavyQueued;
         heavyQueued = false;
+        return pressed;
+    }
+
+    /// <summary>True una sola volta per ogni pressione di Reset (View/Select o R).</summary>
+    public bool ConsumeReset()
+    {
+        bool pressed = resetQueued;
+        resetQueued = false;
         return pressed;
     }
 }

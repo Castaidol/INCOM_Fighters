@@ -76,6 +76,17 @@ public class FighterMovement : MonoBehaviour
         transform.rotation = Quaternion.LookRotation(Vector3.right * Facing, Vector3.up);
     }
 
+    /// <summary>
+    /// Sposta il combattente su X restando dentro l'arena.
+    /// SFIDA S3: la usa il manichino all'angolo per respingere chi lo colpisce.
+    /// </summary>
+    public void Push(float dx)
+    {
+        Vector3 pos = transform.position;
+        pos.x = ClampToArena(pos.x + dx);
+        transform.position = pos;
+    }
+
     float ClampToArena(float x)
     {
         if (arena == null) return x;

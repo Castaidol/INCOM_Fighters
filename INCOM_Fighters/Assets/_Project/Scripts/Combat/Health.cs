@@ -1,8 +1,8 @@
 using UnityEngine;
 
 /// <summary>
-/// Vita del personaggio. Chi vuole sapere quando viene colpito si iscrive a OnDamaged (pattern Observer):
-/// oggi DamageLogger, nelle prossime sessioni la barra vita e il manichino.
+/// Vita del personaggio. Chi vuole sapere cosa succede si iscrive agli eventi (pattern Observer):
+/// DamageLogger ascolta OnDamaged, la barra vita ascolta OnChanged.
 /// </summary>
 public class Health : MonoBehaviour
 {
@@ -14,6 +14,9 @@ public class Health : MonoBehaviour
     /// <summary>Danno ricevuto e vita rimasta.</summary>
     public event System.Action<int, int> OnDamaged;
 
+    /// <summary>Vita attuale e vita massima, a ogni cambiamento (danno, rigenerazione, reset).</summary>
+    public event System.Action<int, int> OnChanged;
+
     void Awake()
     {
         Current = max;
@@ -24,5 +27,14 @@ public class Health : MonoBehaviour
         if (amount <= 0) return;
         Current = Mathf.Max(0, Current - amount);
         OnDamaged?.Invoke(amount, Current);
+        OnChanged?.Invoke(Current, max);
+    }
+
+    /// <summary>Riporta la vita al massimo.</summary>
+    public void RestoreFull()
+    {
+        if (Current == max) return;
+        Current = max;
+        OnChanged?.Invoke(Current, max);
     }
 }
