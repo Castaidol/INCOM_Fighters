@@ -16,12 +16,12 @@ public class DamageLogger : MonoBehaviour
 
     void OnEnable()
     {
-        // TODO 5b: iscrivi il metodo LogDamage all'evento health.OnDamaged.
+        health.OnDamaged += LogDamage;
     }
 
     void OnDisable()
     {
-        // TODO 5c: togli l'iscrizione, così un oggetto disattivato non riceve più eventi.
+        health.OnDamaged -= LogDamage;
     }
 
     void LogDamage(int damage, int current)

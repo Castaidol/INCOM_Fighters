@@ -9,6 +9,9 @@ public class Hurtbox : MonoBehaviour
 {
     [SerializeField] Health health;
 
+    // TODO 3a (sessione 3): aggiungi un evento pubblico OnHit di tipo System.Action<AttackData, Transform>:
+    //   l'attacco ricevuto e chi l'ha tirato. Il manichino lo ascolterà per reagire.
+
     void Awake()
     {
         if (health == null) health = GetComponentInParent<Health>();
@@ -16,6 +19,7 @@ public class Hurtbox : MonoBehaviour
 
     public void ReceiveHit(AttackData attack, Transform attacker)
     {
-        // TODO 6: passa il danno dell'attacco (attack.damage) alla Health.
+        health.TakeDamage(attack.damage);
+        // TODO 3b: dopo il danno lancia OnHit, passando attack e attacker.
     }
 }

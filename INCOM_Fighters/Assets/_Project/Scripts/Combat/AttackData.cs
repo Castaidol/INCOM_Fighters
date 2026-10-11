@@ -25,22 +25,15 @@ public class AttackData : ScriptableObject
     [Header("Effetto")]
     [Min(0)] public int damage = 5;
 
-    /// <summary>Durata totale dell'attacco in frame.</summary>
-    public int TotalFrames
-    {
-        get
-        {
-            // TODO 1a: restituisci la somma di startup, active e recovery.
-            return 0;
-        }
-    }
+    // TODO 1 (sessione 3): aggiungi i due campi che descrivono la reazione di chi viene colpito,
+    //   ognuno con il suo [Tooltip]:
+    //   - public int hitstun = 16;       frame in cui chi viene colpito resta bloccato ([Min(0)])
+    //   - public float knockback = 0.15f; metri di cui chi viene colpito arretra ([Min(0f)])
+    //   Poi imposta negli asset Jab e Straight i valori della tabella del README.
 
-    /// <summary>True se nel frame indicato la hitbox può colpire.</summary>
-    public bool IsActiveFrame(int frame)
-    {
-        // TODO 1b: i frame si contano da 1. I primi "startup" frame preparano il colpo,
-        //   i successivi "active" frame possono colpire: restituisci true solo per quelli.
-        //   Esempio con startup 4 e active 2: attivi i frame 5 e 6.
-        return false;
-    }
+    /// <summary>Durata totale dell'attacco in frame.</summary>
+    public int TotalFrames => startup + active + recovery;
+
+    /// <summary>I frame si contano da 1: i primi "startup" preparano, poi "active" frame possono colpire.</summary>
+    public bool IsActiveFrame(int frame) => frame > startup && frame <= startup + active;
 }

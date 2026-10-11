@@ -19,7 +19,9 @@ public class Hitbox : MonoBehaviour
     /// <summary>Inizio di un nuovo attacco: dimentica chi è stato colpito da quello precedente.</summary>
     public void Begin(AttackData data)
     {
-        // TODO 7a: salva data in attack, svuota alreadyHit e metti isActive a false.
+        attack = data;
+        alreadyHit.Clear();
+        isActive = false;
     }
 
     /// <summary>Chiamato a ogni frame dell'attacco. facing: +1 guarda a destra, -1 a sinistra.</summary>
@@ -27,16 +29,22 @@ public class Hitbox : MonoBehaviour
     {
         if (attack == null) return;
 
-        // TODO 7b: calcola center = transform.position + attack.hitboxOffset, con la x dell'offset
-        //   moltiplicata per facing (l'offset è scritto "verso l'avversario").
-        //   Salva active in isActive; se non è un frame attivo, esci.
+        // L'offset è scritto "verso l'avversario": lo giriamo dal lato in cui guarda il combattente.
+        Vector3 offset = attack.hitboxOffset;
+        offset.x *= facing;
+        center = transform.position + offset;
+        isActive = active;
+        if (!active) return;
 
-        // TODO 7c: Physics.OverlapBox(center, attack.hitboxSize * 0.5f, Quaternion.identity,
-        //   hurtboxLayers, QueryTriggerInteraction.Collide) restituisce i collider toccati. Per ognuno:
-        //   - prendi la Hurtbox con TryGetComponent (se non c'è, passa al successivo)
-        //   - salta le hurtbox del tuo stesso personaggio (stesso transform.root)
-        //   - salta quelle già colpite: alreadyHit.Add restituisce false se c'erano già
-        //   - chiama hurtbox.ReceiveHit(attack, transform)
+        Collider[] hits = Physics.OverlapBox(center, attack.hitboxSize * 0.5f, Quaternion.identity,
+                                             hurtboxLayers, QueryTriggerInteraction.Collide);
+        foreach (Collider hit in hits)
+        {
+            if (!hit.TryGetComponent(out Hurtbox hurtbox)) continue;
+            if (hurtbox.transform.root == transform.root) continue; // non ci si colpisce da soli
+            if (!alreadyHit.Add(hurtbox)) continue;                 // già colpita da questo attacco
+            hurtbox.ReceiveHit(attack, transform);
+        }
     }
 
     /// <summary>Fine dell'attacco.</summary>

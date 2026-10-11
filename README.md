@@ -1,50 +1,61 @@
-# INCOM Fighters — Sessione 2
+# INCOM Fighters — Sessione 3
 
-**Obiettivo:** il tuo personaggio tira il Jab (J / tasto ovest) e lo Straight (K / tasto nord), resta fermo durante il pugno e, quando colpisce il manichino, gli toglie vita una sola volta. Il danno compare in Console.
+**Obiettivo:** il manichino reagisce ai tuoi pugni. Arretra, resta nella reazione per qualche frame e torna in guardia. Una barra in alto a destra mostra la sua vita, che torna piena dopo 2 secondi senza colpi. View/Select (o R) rimette tutto al punto di partenza.
 
 ## Da dove parti
 
-- **Hai finito la sessione 1 nel tuo progetto:** importa `INCOM_Fighters/Pacchetti/Sessione2.unitypackage` (Assets > Import Package > Custom Package…, importa tutto). Aggiunge gli scheletri dei nuovi script in `Assets/_Project/Scripts/Combat`, la cartella `Assets/_Project/Data/Attacks` e aggiorna il taglio delle clip d'attacco. Le modifiche a `FighterInput` e `FighterMovement` (passi 2 e 4) le scrivi tu, seguendo le istruzioni qui sotto.
-- **Sei rimasto indietro:** usa questo branch. Contiene la soluzione della sessione 1 e in `FighterInput` e `FighterMovement` trovi già i TODO dei passi 2 e 4.
+- **Hai finito la sessione 2 nel tuo progetto:** importa `INCOM_Fighters/Pacchetti/Sessione3.unitypackage` (Assets > Import Package > Custom Package…, importa tutto). Aggiunge gli scheletri di `TrainingDummy` e `TrainingManager` in `Assets/_Project/Scripts/Training`, quello di `TrainingHUD` in `Assets/_Project/Scripts/UI` e lo sprite `Assets/_Project/Sprites/Bianco.png`. Le modifiche ad `AttackData`, `Health`, `Hurtbox` e `FighterInput` (passi 1, 2, 3 e 9) le scrivi tu, seguendo le istruzioni qui sotto.
+- **Sei rimasto indietro:** usa questo branch. Contiene la soluzione della sessione 2, e in quei quattro script trovi già i TODO.
 
 ## Cosa trovi già pronto
 
-- Le clip d'attacco del player tagliate: Lead Jab (per il Jab) e Punching (per lo Straight), più Jab Cross, Hook e BoxingUppercut per la sessione 4.
-- Gli scheletri in `Assets/_Project/Scripts/Combat`: `AttackData`, `FighterCombat`, `Hitbox`, `Hurtbox`, `Health`, `DamageLogger`. Cerca i commenti `TODO`: il numero corrisponde al passo qui sotto.
+- Le clip del manichino in `Assets/PartyMonsterRumblePBR/Animation`: `Idle01` e `GetHit` (con Loop Time già spento).
+- Gli scheletri dei nuovi script: `TrainingDummy`, `TrainingManager` e `TrainingHUD`. Cerca i commenti `TODO`: il numero corrisponde al passo qui sotto.
+- Lo sprite bianco `Assets/_Project/Sprites/Bianco.png` per la barra vita: un'Image di tipo Filled senza sprite non si riempie.
 
-All'inizio la console mostra avvisi gialli per campi ed eventi non ancora usati: spariscono man mano che completi i TODO. Se in Console non compare nessun messaggio, controlla che l'icona dei messaggi in alto a destra della Console sia attiva.
+All'inizio la console mostra avvisi gialli per campi non ancora usati: spariscono man mano che completi i TODO. Se in Console non compare nessun messaggio, controlla che l'icona dei messaggi in alto a destra della Console sia attiva.
 
 ## Passi
 
-Dopo ogni **Verifica** prova in Play mode, cliccando nella Game view prima di usare la tastiera.
+Dopo ogni **Verifica** prova in Play mode, cliccando nella Game view prima di usare la tastiera. Per colpire il manichino avvicinati: il Jab arriva a circa 1,1 m.
 
-1. **AttackData.** Completa i TODO 1a e 1b. Poi crea due asset in `Assets/_Project/Data/Attacks` con Create > INCOM Fighters > Attack Data:
+1. **Reazione negli AttackData.** In `AttackData` aggiungi i campi `hitstun` (int, frame) e `knockback` (float, metri) (TODO 1). Poi imposta gli asset:
 
-   | Asset | State Name | Startup | Active | Recovery | Hitbox Offset | Hitbox Size | Damage |
-   | --- | --- | --- | --- | --- | --- | --- | --- |
-   | Jab | Jab | 4 | 2 | 10 | 0.95, 1.38, 0 | 0.3, 0.25, 0.5 | 5 |
-   | Straight | Straight | 11 | 3 | 15 | 0.8, 1.11, 0 | 0.3, 0.3, 0.6 | 12 |
+   | Asset | Hitstun | Knockback |
+   | --- | --- | --- |
+   | Jab | 16 | 0.15 |
+   | Straight | 22 | 0.35 |
 
-   - **Verifica:** gli asset si aprono e si modificano dall'Inspector.
-2. **Input dei pugni** in `FighterInput` (TODO 2a–2d se usi questo branch). Se lavori sul tuo progetto, aggiungi:
-   - due campi `InputAction` per `LightPunch` e `HeavyPunch` e due `bool` `lightQueued` e `heavyQueued`;
-   - in `Awake`, la ricerca delle due azioni con `FindAction`;
-   - in `Update`, `lightQueued = true` quando `WasPressedThisFrame()` è vero (e lo stesso per il pesante);
-   - due metodi pubblici `bool ConsumeLight()` e `bool ConsumeHeavy()` che restituiscono il valore e lo rimettono a `false`.
-3. **Animator.** In `Fighter.controller` aggiungi due stati **senza transizioni**: `Jab` (Motion: clip Lead Jab, Speed 1.75) e `Straight` (Motion: clip Punching, Speed 2). Li farà partire il codice.
-4. **FighterCombat.** Completa i TODO 4a–4f. Aggiungi `FighterCombat` al player (aggiunge da solo `Hitbox`) e assegna Light Attack = Jab e Heavy Attack = Straight.
-   Poi in `FighterMovement` (TODO 4g): durante un attacco il player non deve muoversi né girarsi. In `Awake` cerca il `FighterCombat` con `TryGetComponent`; in `Update`, se c'è e il suo `State` è `FighterState.Attack`, salta `UpdateFacing()` e usa 0 al posto di `input.Horizontal`.
-   - **Verifica:** J e K fanno partire i pugni, il player non cammina finché il pugno non finisce e poi torna in guardia.
-5. **Health e DamageLogger.** Completa i TODO 5a–5c e aggiungi i due componenti al manichino.
-6. **Hurtbox.** Crea il layer `Hurtbox` (Project Settings > Tags and Layers). Nel manichino crea un figlio vuoto `Hurtbox` su quel layer, con un Box Collider (Is Trigger attivo, Center 0, 0.8, 0, Size 0.9, 1.6, 0.9) e il componente `Hurtbox`. Completa il TODO 6.
-7. **Hitbox.** Sul player imposta Hurtbox Layers = Hurtbox e completa i TODO 7a–7c.
-   - **Verifica:** a contatto il Jab toglie 5 e lo Straight 12, una sola volta per pugno. In Scene view la hitbox è grigia durante l'attacco e rossa nei frame attivi.
+2. **Health** (TODO 2a–2c). Aggiungi un secondo evento `OnChanged` dello stesso tipo di `OnDamaged`, che passa vita attuale e vita massima. Lancialo in `TakeDamage` dopo `OnDamaged` e in un nuovo metodo pubblico `RestoreFull()` che riporta la vita al massimo.
+3. **Hurtbox** (TODO 3a–3b). Aggiungi un evento pubblico `OnHit` di tipo `System.Action<AttackData, Transform>` e lancialo in `ReceiveHit` dopo il danno, passando l'attacco e chi l'ha tirato.
+4. **Animator del manichino.** Crea `Assets/_Project/Animator/Dummy.controller` con due stati **senza transizioni**: `Idle` (Motion: clip Idle01, stato di default) e `Hit` (Motion: clip GetHit, Speed 1.45). Mettilo nel campo Controller dell'Animator del manichino, al posto di `Default`.
+   - **Verifica:** in Play il manichino respira in Idle come prima.
+5. **TrainingDummy.** Aggiungilo al manichino e collega Animator (quello del manichino) e Arena. Completa i TODO 5a–5c.
+   - **Verifica:** il Jab fa reagire il manichino per un attimo, lo Straight più a lungo; due Jab di fila mostrano due reazioni.
+6. **Knockback** (TODO 6a–6b).
+   - **Verifica:** il Jab sposta il manichino di 15 cm e lo Straight di 35 cm; spinto all'angolo, il manichino si ferma al bordo dell'arena.
+7. **Rigenerazione** (TODO 7).
+   - **Verifica:** colpisci, aspetta 2 secondi e colpisci di nuovo: in Console la vita riparte da 100 (`Dummy: -5 (vita 95/100)`).
+8. **Barra vita.**
+   - GameObject > UI > Canvas. Nel Canvas Scaler: UI Scale Mode = Scale With Screen Size, Reference Resolution 1920 × 1080, Match 0.5.
+   - Nel Canvas, UI > Image e chiamala `BarraManichino`. In Anchor Presets scegli in alto a destra tenendo premuto Shift (sposta anche il pivot), poi Pos X -60, Pos Y -80, Width 640, Height 36. Source Image: Bianco, colore scuro.
+   - Dentro `BarraManichino`, un'altra Image chiamata `Riempimento`. Anchor Presets: stretch su tutti e due gli assi, con Left, Right, Top e Bottom a 4. Source Image: Bianco, colore giallo, Image Type = Filled, Fill Method = Horizontal, Fill Origin = Right (si svuota verso il centro dello schermo).
+   - Aggiungi `TrainingHUD` al Canvas, collega Dummy Health (il manichino) e Dummy Health Fill (`Riempimento`) e completa i TODO 8a–8b.
+   - **Verifica:** la barra cala a ogni colpo e torna piena con la rigenerazione.
+9. **Reset.** In `FighterInput` (TODO 9a–9d) leggi l'azione `Reset`, già presente nella action map, come fai con i pugni. Se lavori sul tuo progetto, aggiungi:
+   - un campo `InputAction` per `Reset` e un `bool resetQueued`;
+   - in `Awake`, la ricerca dell'azione con `FindAction`;
+   - in `Update`, `resetQueued = true` quando `WasPressedThisFrame()` è vero;
+   - un metodo pubblico `bool ConsumeReset()` che restituisce il valore e lo rimette a `false`.
+
+   Poi crea un oggetto vuoto `Training` con `TrainingManager`, collega Player Input (il player) e Dummy (il manichino) e completa i TODO 9e–9f.
+   - **Verifica:** View/Select o R riporta player e manichino al punto di partenza, con la barra piena.
 
 ## Sfide
 
-- **Allinea la hitbox al pugno:** in Play mode metti in pausa e usa il pulsante Step per avanzare un frame alla volta; confronta in Scene view la hitbox rossa con la mano e correggi `Hitbox Offset` nell'asset.
-- **Misura la portata:** trova la distanza a cui il Jab colpisce e lo Straight no.
-- **Un pesante diverso:** crea un asset e uno stato `Hook` (clip Hook, Speed 2) e usalo come attacco pesante.
+- **Colpi pesanti più forti:** ritara hitstun e knockback negli asset (per esempio Straight a 26 frame e 0.5 m) e verifica che il manichino arretri visibilmente di più e resti più a lungo nella reazione.
+- **All'angolo arretra l'attaccante:** quando il bordo dell'arena ferma il manichino, la spinta che avanza deve respingere chi ha colpito. In `ApplyKnockback` calcola quanto ha tolto il Clamp e passalo a un nuovo metodo `Push(float dx)` di `FighterMovement`, che sposta il player restando nell'arena. Senza questa regola, all'angolo si può colpire all'infinito restando attaccati.
+- **Rigenerazione graduale:** invece di tornare piena di colpo, dopo i 120 frame la vita risale di 1 punto per frame, con un metodo `Heal` in `Health`.
 
 ## Fine sessione
 

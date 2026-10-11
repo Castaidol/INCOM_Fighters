@@ -24,6 +24,7 @@ public class FighterMovement : MonoBehaviour
     static readonly int MoveXHash = Animator.StringToHash("MoveX");
 
     FighterInput input;
+    FighterCombat combat; // facoltativo: c'è dalla sessione 2
     Pushbox pushbox;
     Pushbox opponentPushbox;
 
@@ -33,6 +34,7 @@ public class FighterMovement : MonoBehaviour
     void Awake()
     {
         input = GetComponent<FighterInput>();
+        TryGetComponent(out combat);
         pushbox = GetComponent<Pushbox>();
         if (animator == null) animator = GetComponentInChildren<Animator>();
         if (opponent != null) opponent.TryGetComponent(out opponentPushbox);
@@ -43,18 +45,17 @@ public class FighterMovement : MonoBehaviour
 
     void Update()
     {
-        // TODO 4g (sessione 2): durante un attacco il combattente resta fermo e non si gira.
-        //   In Awake cerca il FighterCombat con TryGetComponent (può non esserci).
-        //   Qui, se c'è e il suo State è FighterState.Attack, salta UpdateFacing()
-        //   e usa 0 al posto di input.Horizontal per tutto il resto del metodo.
-        UpdateFacing();
+        // Durante un attacco il combattente resta fermo e non si gira.
+        bool canMove = combat == null || combat.State != FighterState.Attack;
+        if (canMove) UpdateFacing();
+        float horizontal = canMove ? input.Horizontal : 0f;
 
         // Direzione relativa all'avversario: +1 avanti, -1 indietro, 0 fermo.
-        float relative = input.Horizontal * Facing;
+        float relative = horizontal * Facing;
         float speed = relative >= 0f ? forwardSpeed : backSpeed;
 
         Vector3 pos = transform.position;
-        pos.x += input.Horizontal * speed * Time.deltaTime;
+        pos.x += horizontal * speed * Time.deltaTime;
         pos.x = ClampToArena(pos.x);
         pos.x = ResolvePushbox(pos.x);
         pos.z = 0f; // l'asse Z è bloccato: siamo in 2.5D

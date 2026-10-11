@@ -45,34 +45,44 @@ public class FighterCombat : MonoBehaviour
 
     void FixedUpdate()
     {
-        // TODO 4a: consuma SEMPRE le pressioni dei due pugni con input.ConsumeLight() e input.ConsumeHeavy().
-        //   Quelle arrivate durante un attacco vanno perse: il buffer per le combo arriva nella sessione 4.
+        // Le pressioni si consumano a ogni frame: quelle arrivate durante un attacco vanno perse.
+        // Nella sessione 4 un buffer le terrà per qualche frame, per le combo.
+        bool light = input.ConsumeLight();
+        bool heavy = input.ConsumeHeavy();
 
-        // TODO 4b: se lo stato è Attack, fai avanzare l'attacco con TickAttack() ed esci dal metodo.
+        if (State == FighterState.Attack)
+        {
+            TickAttack();
+            return;
+        }
 
-        // TODO 4c: altrimenti, se è stato premuto il pugno leggero (e lightAttack non è null) avvia lightAttack;
-        //   se è stato premuto il pesante avvia heavyAttack; se nessuno dei due,
-        //   State diventa Walk o Idle a seconda di input.Horizontal.
+        if (light && lightAttack != null) StartAttack(lightAttack);
+        else if (heavy && heavyAttack != null) StartAttack(heavyAttack);
+        else State = input.Horizontal != 0f ? FighterState.Walk : FighterState.Idle;
     }
 
     void StartAttack(AttackData attack)
     {
-        // TODO 4d: salva l'attacco in current, azzera frame e metti State a Attack.
-        //   Prepara la hitbox con hitbox.Begin(attack) e fai partire l'animazione:
-        //   animator.CrossFadeInFixedTime(attack.stateName, crossFade);
-        //   Infine chiama TickAttack(): questo è già il frame 1 dell'attacco.
+        current = attack;
+        frame = 0;
+        State = FighterState.Attack;
+        hitbox.Begin(attack);
+        animator.CrossFadeInFixedTime(attack.stateName, crossFade);
+        TickAttack(); // questo è già il frame 1 dell'attacco
     }
 
     void TickAttack()
     {
-        // TODO 4e: incrementa frame e aggiorna la hitbox:
-        //   hitbox.Tick(current.IsActiveFrame(frame), movement.Facing);
-        //   Quando frame arriva a current.TotalFrames, chiama EndAttack().
+        frame++;
+        hitbox.Tick(current.IsActiveFrame(frame), movement.Facing);
+        if (frame >= current.TotalFrames) EndAttack();
     }
 
     void EndAttack()
     {
-        // TODO 4f: chiudi la hitbox (hitbox.End()), current = null, State = Idle
-        //   e torna in guardia con animator.CrossFadeInFixedTime(locomotionState, 0.1f).
+        hitbox.End();
+        current = null;
+        State = FighterState.Idle;
+        animator.CrossFadeInFixedTime(locomotionState, 0.1f);
     }
 }

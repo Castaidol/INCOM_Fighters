@@ -14,6 +14,10 @@ public class Health : MonoBehaviour
     /// <summary>Danno ricevuto e vita rimasta.</summary>
     public event System.Action<int, int> OnDamaged;
 
+    // TODO 2a (sessione 3): aggiungi un secondo evento pubblico, OnChanged, dello stesso tipo
+    //   System.Action<int, int>. Passa la vita attuale e la vita massima a ogni cambiamento
+    //   (danno, rigenerazione, reset): è quello che ascolterà la barra vita.
+
     void Awake()
     {
         Current = max;
@@ -21,8 +25,12 @@ public class Health : MonoBehaviour
 
     public void TakeDamage(int amount)
     {
-        // TODO 5a: ignora i valori minori o uguali a 0.
-        //   Scala Current senza scendere sotto 0 (Mathf.Max) e avvisa chi ascolta:
-        //   OnDamaged?.Invoke(amount, Current);
+        if (amount <= 0) return;
+        Current = Mathf.Max(0, Current - amount);
+        OnDamaged?.Invoke(amount, Current);
+        // TODO 2b: avvisa anche chi ascolta OnChanged, passando Current e max.
     }
+
+    // TODO 2c: aggiungi un metodo pubblico RestoreFull() che riporta Current a max e lancia OnChanged.
+    //   Se la vita è già piena non fa nulla.
 }

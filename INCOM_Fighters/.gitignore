@@ -54,6 +54,8 @@ sysinfo.txt
 # Builds
 *.apk
 *.unitypackage
+# I pacchetti per gli studenti invece vanno nel repository (in LFS)
+!/Pacchetti/*.unitypackage
 
 # Crashlytics generated file
 crashlytics-build.properties
