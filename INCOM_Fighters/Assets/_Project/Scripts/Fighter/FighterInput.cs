@@ -9,22 +9,50 @@ using UnityEngine.InputSystem;
 [RequireComponent(typeof(PlayerInput))]
 public class FighterInput : MonoBehaviour
 {
-    // TODO 3a: dichiara un campo privato di tipo InputAction per l'azione Move.
+    [Tooltip("Sotto questo valore lo stick è considerato fermo.")]
+    [SerializeField, Range(0f, 0.9f)] float deadZone = 0.4f; // SFIDA S1: dead zone regolabile
+
+    InputAction moveAction;
+
+    // TODO 2a (sessione 2): aggiungi due campi InputAction per LightPunch e HeavyPunch
+    //   e due bool, lightQueued e heavyQueued, per le pressioni in attesa.
+    //   Le pressioni arrivano in Update, ma il combattimento le usa in FixedUpdate:
+    //   restano "in attesa" finché qualcuno non le consuma.
 
     /// <summary>Direzione orizzontale nel mondo: -1 sinistra, 0 fermo, +1 destra.</summary>
     public float Horizontal { get; private set; }
 
     void Awake()
     {
-        // TODO 3b: prendi le azioni del giocatore con GetComponent<PlayerInput>().actions
-        //   e salva nel campo l'azione "Move" con FindAction("Move", throwIfNotFound: true).
-        //   PlayerInput crea una copia delle azioni per ogni giocatore: vanno cercate lì, non nell'asset.
+        // PlayerInput crea una copia dell'asset per ogni giocatore: si leggono le azioni da lì.
+        InputActionAsset actions = GetComponent<PlayerInput>().actions;
+        moveAction = actions.FindAction("Move", throwIfNotFound: true);
+        // TODO 2b: cerca anche le azioni "LightPunch" e "HeavyPunch".
     }
 
     void Update()
     {
-        // TODO 3c: leggi Move come float con ReadValue<float>().
-        //   In un picchiaduro la camminata è digitale: si cammina a velocità piena o si sta fermi.
-        //   Se il valore assoluto è sotto 0.5, Horizontal = 0; altrimenti Horizontal = Mathf.Sign(valore).
+        float x = moveAction.ReadValue<float>();
+
+        // In un picchiaduro la camminata è digitale: o si cammina a velocità piena o si sta fermi.
+        Horizontal = Mathf.Abs(x) < deadZone ? 0f : Mathf.Sign(x);
+
+        // TODO 2c: se l'azione del pugno leggero è stata premuta in questo frame (WasPressedThisFrame),
+        //   metti lightQueued a true. Lo stesso per il pesante.
+    }
+
+    /// <summary>True una sola volta per ogni pressione del pugno leggero.</summary>
+    public bool ConsumeLight()
+    {
+        // TODO 2d: restituisci il valore di lightQueued e rimettilo a false,
+        //   così ogni pressione viene usata una sola volta.
+        return false;
+    }
+
+    /// <summary>True una sola volta per ogni pressione del pugno pesante.</summary>
+    public bool ConsumeHeavy()
+    {
+        // TODO 2d: come ConsumeLight, ma con heavyQueued.
+        return false;
     }
 }

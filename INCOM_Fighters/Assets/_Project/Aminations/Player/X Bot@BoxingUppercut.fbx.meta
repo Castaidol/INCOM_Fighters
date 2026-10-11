@@ -35,8 +35,8 @@ ModelImporter:
       name: BoxingUppercut
       takeName: mixamo.com
       internalID: -203655887218126122
-      firstFrame: 0
-      lastFrame: 50
+      firstFrame: 6
+      lastFrame: 39.25
       wrapMode: 0
       orientationOffsetY: 0
       level: 0
