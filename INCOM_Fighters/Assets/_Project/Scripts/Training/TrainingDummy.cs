@@ -20,6 +20,8 @@ public class TrainingDummy : MonoBehaviour, IHitReceiver
     [SerializeField] ArenaBounds arena;
     [Tooltip("Opzioni dell'allenamento. Se manca, il manichino non para e non va mai KO.")]
     [SerializeField] TrainingSettings settings;
+    [Tooltip("Durante l'hitstop il manichino non conta i suoi frame.")]
+    [SerializeField] HitStop hitStop;
 
     [Header("Animazione")]
     [SerializeField] string idleState = "Idle";
@@ -171,6 +173,9 @@ public class TrainingDummy : MonoBehaviour, IHitReceiver
 
     void FixedUpdate()
     {
+        // Hitstop: stun, knockback, KO e rigenerazione restano fermi.
+        if (hitStop != null && hitStop.IsFrozen) return;
+
         if (knockbackLeft > 0) ApplyKnockback();
 
         switch (State)

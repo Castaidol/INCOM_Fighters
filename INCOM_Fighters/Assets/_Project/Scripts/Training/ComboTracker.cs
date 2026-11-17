@@ -17,6 +17,9 @@ public class ComboTracker : MonoBehaviour
     /// <summary>Danno della combo in corso.</summary>
     public int Damage { get; private set; }
 
+    /// <summary>Colpi e danno della combo in corso, a ogni colpo dal secondo in poi.</summary>
+    public event System.Action<int, int> OnComboChanged;
+
     /// <summary>Colpi e danno di una combo appena finita (da 2 colpi in su).</summary>
     public event System.Action<int, int> OnComboEnded;
 
@@ -49,6 +52,7 @@ public class ComboTracker : MonoBehaviour
         }
         Hits++;
         Damage += attack.damage;
+        if (Hits >= 2) OnComboChanged?.Invoke(Hits, Damage);
     }
 
     void LogBlock(AttackData attack)

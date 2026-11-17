@@ -22,6 +22,8 @@ MonoBehaviour:
   hitstun: 18
   blockstun: 12
   knockback: 0.2
+  hitstop: 6
+  hitSound: {fileID: 8300000, guid: 64d98bb494232ee41948997832ffe227, type: 3}
   comboWindowStart: 8
   nextOnLight: {fileID: 11400000, guid: 5337d2c5249ab3b478e795c244a333f8, type: 2}
   nextOnHeavy: {fileID: 11400000, guid: bef1a4a6098e8e24bb8b217f7d974518, type: 2}

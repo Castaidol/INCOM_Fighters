@@ -20,7 +20,27 @@ public class FightCamera : MonoBehaviour
     [SerializeField] float nearSpan = 2f;
     [SerializeField] float farSpan = 8f;
 
+    [Header("Tremolio")] // sessione 6
+    [Tooltip("Secondi in cui il tremolio si smorza fino a zero.")]
+    [SerializeField] float shakeDuration = 0.2f;
+
     Vector3 velocity;
+    Vector3 basePosition; // posizione senza tremolio: è questa che segue i combattenti
+    float shakeStrength;
+    float shakeTimeLeft;
+
+    void Awake()
+    {
+        basePosition = transform.position;
+    }
+
+    /// <summary>Fa tremare la camera di "strength" metri; il tremolio si smorza in shakeDuration secondi.</summary>
+    public void Shake(float strength)
+    {
+        float current = shakeTimeLeft > 0f ? shakeStrength * shakeTimeLeft / shakeDuration : 0f;
+        shakeStrength = Mathf.Max(strength, current);
+        shakeTimeLeft = shakeDuration;
+    }
 
     void LateUpdate()
     {
@@ -34,6 +54,16 @@ public class FightCamera : MonoBehaviour
         float distance = Mathf.Lerp(minDistance, maxDistance, t);
 
         Vector3 target = new Vector3(midX, height, -distance);
-        transform.position = Vector3.SmoothDamp(transform.position, target, ref velocity, smoothTime);
+        basePosition = Vector3.SmoothDamp(basePosition, target, ref velocity, smoothTime);
+
+        // Il tremolio gira in tempo reale: continua anche durante l'hitstop, che ferma solo i combattenti.
+        Vector3 offset = Vector3.zero;
+        if (shakeTimeLeft > 0f)
+        {
+            shakeTimeLeft -= Time.deltaTime;
+            float fade = Mathf.Clamp01(shakeTimeLeft / shakeDuration);
+            offset = (Vector3)(Random.insideUnitCircle * (shakeStrength * fade));
+        }
+        transform.position = basePosition + offset;
     }
 }

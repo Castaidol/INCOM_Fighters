@@ -19,6 +19,9 @@ public class Hitbox : MonoBehaviour
     /// <summary>Un colpo ha toccato una hurtbox, con il risultato deciso da chi l'ha ricevuto.</summary>
     public event System.Action<AttackData, HitResult> OnContact;
 
+    /// <summary>Centro della hitbox nell'ultimo frame dell'attacco: il punto d'impatto.</summary>
+    public Vector3 Center => center;
+
     /// <summary>True se l'attacco in corso ha già toccato almeno una hurtbox (anche se il colpo è stato parato):
     /// serve per continuare la combo.</summary>
     public bool HasHit => alreadyHit.Count > 0;

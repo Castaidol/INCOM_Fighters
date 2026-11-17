@@ -32,6 +32,12 @@ public class AttackData : ScriptableObject
     [Tooltip("Metri di cui chi viene colpito arretra.")]
     [Min(0f)] public float knockback = 0.15f;
 
+    [Header("Peso del colpo")]
+    [Tooltip("Frame in cui attaccante e colpito si fermano all'impatto (hitstop).")]
+    [Min(0)] public int hitstop = 5;
+    [Tooltip("Suono quando il colpo va a segno.")]
+    public AudioClip hitSound;
+
     [Header("Combo")]
     [Tooltip("Frame da cui un pugno nel buffer fa partire il colpo successivo; la finestra dura fino all'ultimo frame. 0 = nessuna finestra.")]
     [Min(0)] public int comboWindowStart;

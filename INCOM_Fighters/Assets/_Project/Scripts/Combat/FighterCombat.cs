@@ -21,6 +21,9 @@ public class FighterCombat : MonoBehaviour
     [Tooltip("Secondi di dissolvenza tra le animazioni.")]
     [SerializeField] float crossFade = 0.05f;
 
+    [Tooltip("Durante l'hitstop il combattente non conta i suoi frame.")]
+    [SerializeField] HitStop hitStop;
+
     FighterInput input;
     FighterMovement movement;
     Hitbox hitbox;
@@ -52,6 +55,9 @@ public class FighterCombat : MonoBehaviour
 
     void FixedUpdate()
     {
+        // Hitstop: questo frame non esiste per il combattente.
+        if (hitStop != null && hitStop.IsFrozen) return;
+
         if (State == FighterState.Attack)
         {
             TickAttack();
