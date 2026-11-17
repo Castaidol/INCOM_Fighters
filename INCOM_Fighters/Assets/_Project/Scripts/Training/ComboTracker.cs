@@ -26,24 +26,39 @@ public class ComboTracker : MonoBehaviour
 
     void OnEnable()
     {
-        // TODO 7a: iscriviti agli eventi del manichino: OnHitTaken con CountHit e OnRecovered con EndCombo.
+        dummy.OnHitTaken += CountHit;
+        dummy.OnRecovered += EndCombo;
+        // TODO 7 (sessione 5): iscriviti anche a dummy.OnBlocked con un metodo che scrive "<attacco> parato"
+        //   (per esempio "Cross parato") e togli l'iscrizione in OnDisable.
     }
 
     void OnDisable()
     {
-        // TODO 7a: togli le due iscrizioni.
+        dummy.OnHitTaken -= CountHit;
+        dummy.OnRecovered -= EndCombo;
     }
 
     void CountHit(AttackData attack, bool comboHit)
     {
-        // TODO 7b: se comboHit è falso il colpo comincia una combo nuova: azzera Hits e Damage.
-        //   Poi aggiungi 1 a Hits e il danno dell'attacco a Damage.
+        // Colpo arrivato fuori dall'hitstun: comincia una combo nuova.
+        if (!comboHit)
+        {
+            Hits = 0;
+            Damage = 0;
+        }
+        Hits++;
+        Damage += attack.damage;
     }
 
     void EndCombo()
     {
-        // TODO 7c: un colpo solo non è una combo. Se Hits è almeno 2:
-        //   Debug.Log($"Combo {Hits} colpi – {Damage} danni") e OnComboEnded?.Invoke(Hits, Damage).
-        //   In ogni caso, alla fine azzera Hits e Damage.
+        // Un colpo solo non è una combo.
+        if (Hits >= 2)
+        {
+            Debug.Log($"Combo {Hits} colpi – {Damage} danni");
+            OnComboEnded?.Invoke(Hits, Damage);
+        }
+        Hits = 0;
+        Damage = 0;
     }
 }

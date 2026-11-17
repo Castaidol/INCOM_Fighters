@@ -543,6 +543,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::FighterInput
   deadZone: 0.4
+  bufferFrames: 8
 --- !u!114 &832331787
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1053,6 +1054,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 8230766273605467533, guid: 413a1d22819f431ebb3ff91a05364000, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1557106264}
+    - targetCorrespondingSourceObject: {fileID: 8230766273605467533, guid: 413a1d22819f431ebb3ff91a05364000, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1557106265}
   m_SourcePrefab: {fileID: 100100000, guid: 413a1d22819f431ebb3ff91a05364000, type: 3}
 --- !u!1 &1557106259 stripped
 GameObject:
@@ -1122,6 +1126,18 @@ MonoBehaviour:
   crossFade: 0.1
   knockbackFrames: 6
   regenDelay: 120
+--- !u!114 &1557106265
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1557106259}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: dd10cf349030c1846a37d8b858a48acf, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ComboTracker
 --- !u!1 &1597374866
 GameObject:
   m_ObjectHideFlags: 0

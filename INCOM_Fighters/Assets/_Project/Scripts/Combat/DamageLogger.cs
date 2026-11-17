@@ -17,6 +17,8 @@ public class DamageLogger : MonoBehaviour
     void OnEnable()
     {
         health.OnDamaged += LogDamage;
+        // TODO 6c (sessione 5): iscriviti anche a health.OnKO con un metodo che scrive "<nome>: KO" in Console
+        //   (e togli l'iscrizione in OnDisable).
     }
 
     void OnDisable()

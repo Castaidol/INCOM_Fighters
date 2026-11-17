@@ -21,3 +21,6 @@ MonoBehaviour:
   damage: 12
   hitstun: 22
   knockback: 0.35
+  comboWindowStart: 13
+  nextOnLight: {fileID: 0}
+  nextOnHeavy: {fileID: 11400000, guid: bef1a4a6098e8e24bb8b217f7d974518, type: 2}

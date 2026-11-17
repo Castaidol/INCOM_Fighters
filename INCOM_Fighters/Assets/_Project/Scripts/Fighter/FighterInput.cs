@@ -25,7 +25,7 @@ public class FighterInput : MonoBehaviour
     InputAction heavyAction;
     InputAction resetAction;
 
-    // Input buffer (sessione 4): un solo posto. L'ultimo pugno premuto sostituisce il precedente
+    // Input buffer: un solo posto. L'ultimo pugno premuto sostituisce il precedente
     // e resta valido per bufferFrames frame, finché FighterCombat non lo usa.
     AttackButton buffered;
     int bufferAge;
@@ -56,27 +56,30 @@ public class FighterInput : MonoBehaviour
         // In un picchiaduro la camminata è digitale: o si cammina a velocità piena o si sta fermi.
         Horizontal = Mathf.Abs(x) < deadZone ? 0f : Mathf.Sign(x);
 
-        // TODO 4a (sessione 4): le pressioni non vanno più in lightQueued e heavyQueued ma nel buffer.
-        //   Se il pugno leggero è stato premuto in questo frame (WasPressedThisFrame) chiama Buffer(AttackButton.Light);
-        //   lo stesso per il pesante con AttackButton.Heavy.
+        // Le pressioni arrivano in Update; il combattimento le legge in FixedUpdate dal buffer.
+        if (lightAction.WasPressedThisFrame()) Buffer(AttackButton.Light);
+        if (heavyAction.WasPressedThisFrame()) Buffer(AttackButton.Heavy);
         if (resetAction.WasPressedThisFrame()) resetQueued = true;
     }
 
     void FixedUpdate()
     {
-        // TODO 4c: un FixedUpdate è un frame. Se il buffer non è vuoto (None), aumenta bufferAge di 1;
-        //   quando bufferAge supera bufferFrames il pugno è scaduto: rimetti buffered a None.
+        // Un FixedUpdate è un frame: il pugno nel buffer invecchia di uno e dopo bufferFrames scade.
+        if (buffered == AttackButton.None) return;
+        bufferAge++;
+        if (bufferAge > bufferFrames) buffered = AttackButton.None;
     }
 
     void Buffer(AttackButton button)
     {
-        // TODO 4b: metti button in buffered e riporta bufferAge a 0 (ogni pressione riparte da capo).
+        buffered = button;
+        bufferAge = 0;
     }
 
     /// <summary>Svuota il buffer: chi ha usato il pugno lo chiama, così vale una volta sola.</summary>
     public void ConsumeBuffer()
     {
-        // TODO 4d: rimetti buffered a None.
+        buffered = AttackButton.None;
     }
 
     /// <summary>True una sola volta per ogni pressione di Reset (View/Select o R).</summary>

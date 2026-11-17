@@ -36,6 +36,10 @@ public class FighterCombat : MonoBehaviour
     /// <summary>Frame dell'attacco in corso, da 1 a TotalFrames.</summary>
     public int CurrentFrame => frame;
 
+    // TODO 8a (sessione 5): due eventi pubblici di tipo System.Action<AttackData> per l'HUD:
+    //   - OnAttackStarted, lanciato in StartAttack subito dopo il CrossFade (anche dentro una combo)
+    //   - OnWhiff, lanciato all'inizio di EndAttack se hitbox.HasHit è falso (l'attacco non ha toccato niente)
+
     void Awake()
     {
         input = GetComponent<FighterInput>();
@@ -52,14 +56,16 @@ public class FighterCombat : MonoBehaviour
             return;
         }
 
-        // TODO 5a (sessione 4): libero, un pugno nel buffer fa partire l'attacco di partenza di quel tasto.
-        //   AttackData attack = AttackFor(input.BufferedButton);
-        //   Se attack non è null: input.ConsumeBuffer() e StartAttack(attack).
-        //   Altrimenti, come prima, Walk o Idle secondo input.Horizontal (la riga qui sotto).
-        State = input.Horizontal != 0f ? FighterState.Walk : FighterState.Idle;
+        // Libero: un pugno nel buffer fa partire l'attacco di partenza di quel tasto.
+        AttackData attack = AttackFor(input.BufferedButton);
+        if (attack != null)
+        {
+            input.ConsumeBuffer();
+            StartAttack(attack);
+        }
+        else State = input.Horizontal != 0f ? FighterState.Walk : FighterState.Idle;
     }
 
-    /// <summary>L'attacco di partenza per quel tasto, o null.</summary>
     AttackData AttackFor(AttackButton button) => button switch
     {
         AttackButton.Light => lightAttack,
@@ -82,10 +88,18 @@ public class FighterCombat : MonoBehaviour
         frame++;
         hitbox.Tick(current.IsActiveFrame(frame), movement.Facing);
 
-        // TODO 5b: finestra di combo. Se current.IsInComboWindow(frame) e hitbox.HasHit sono veri,
-        //   chiedi all'attacco il seguito per il tasto nel buffer: current.NextFor(input.BufferedButton).
-        //   Se c'è: input.ConsumeBuffer(), StartAttack(seguito) e return (il resto del recovery si salta).
-        //   Va fatto PRIMA del controllo qui sotto, che chiude l'attacco all'ultimo frame.
+        // Finestra di combo: se il colpo ha toccato e nel buffer c'è un tasto con un seguito,
+        // il colpo successivo parte subito e il resto del recovery si salta.
+        if (current.IsInComboWindow(frame) && hitbox.HasHit)
+        {
+            AttackData next = current.NextFor(input.BufferedButton);
+            if (next != null)
+            {
+                input.ConsumeBuffer();
+                StartAttack(next);
+                return;
+            }
+        }
 
         if (frame >= current.TotalFrames) EndAttack();
     }

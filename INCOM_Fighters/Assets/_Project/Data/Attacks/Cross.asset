@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a26d6dc6ccfdc2c479f5725141b253c4, type: 3}
+  m_Name: Cross
+  m_EditorClassIdentifier: Assembly-CSharp::AttackData
+  stateName: Cross
+  startup: 6
+  active: 3
+  recovery: 12
+  hitboxOffset: {x: 1.02, y: 1.27, z: 0}
+  hitboxSize: {x: 0.3, y: 0.25, z: 0.5}
+  damage: 7
+  hitstun: 18
+  knockback: 0.2
+  comboWindowStart: 8
+  nextOnLight: {fileID: 11400000, guid: 5337d2c5249ab3b478e795c244a333f8, type: 2}
+  nextOnHeavy: {fileID: 11400000, guid: bef1a4a6098e8e24bb8b217f7d974518, type: 2}
