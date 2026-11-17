@@ -27,6 +27,8 @@ public class AttackData : ScriptableObject
     [Min(0)] public int damage = 5;
     [Tooltip("Frame in cui chi viene colpito resta bloccato nella reazione.")]
     [Min(0)] public int hitstun = 16;
+    [Tooltip("Frame in cui chi para resta bloccato nella parata.")]
+    [Min(0)] public int blockstun = 10;
     [Tooltip("Metri di cui chi viene colpito arretra.")]
     [Min(0f)] public float knockback = 0.15f;
 
@@ -43,6 +45,15 @@ public class AttackData : ScriptableObject
 
     /// <summary>I frame si contano da 1: i primi "startup" preparano, poi "active" frame possono colpire.</summary>
     public bool IsActiveFrame(int frame) => frame > startup && frame <= startup + active;
+
+    /// <summary>Frame dell'attaccante dopo il colpo, se colpisce sul primo frame attivo.</summary>
+    public int FramesAfterHit => active - 1 + recovery;
+
+    /// <summary>Vantaggio in frame a segno: positivo se l'attaccante torna libero prima di chi è colpito.</summary>
+    public int AdvantageOnHit => hitstun - FramesAfterHit;
+
+    /// <summary>Vantaggio in frame in parata: negativo vuol dire che chi para torna libero prima.</summary>
+    public int AdvantageOnBlock => blockstun - FramesAfterHit;
 
     /// <summary>True dal frame comboWindowStart fino all'ultimo frame dell'attacco.</summary>
     public bool IsInComboWindow(int frame) => comboWindowStart > 0 && frame >= comboWindowStart && frame <= TotalFrames;

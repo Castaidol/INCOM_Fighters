@@ -16,7 +16,11 @@ public class Hitbox : MonoBehaviour
     Vector3 center;
     bool isActive;
 
-    /// <summary>True se l'attacco in corso ha già toccato almeno una hurtbox: serve per continuare la combo.</summary>
+    /// <summary>Un colpo ha toccato una hurtbox, con il risultato deciso da chi l'ha ricevuto.</summary>
+    public event System.Action<AttackData, HitResult> OnContact;
+
+    /// <summary>True se l'attacco in corso ha già toccato almeno una hurtbox (anche se il colpo è stato parato):
+    /// serve per continuare la combo.</summary>
     public bool HasHit => alreadyHit.Count > 0;
 
     /// <summary>Inizio di un nuovo attacco: dimentica chi è stato colpito da quello precedente.</summary>
@@ -46,7 +50,8 @@ public class Hitbox : MonoBehaviour
             if (!hit.TryGetComponent(out Hurtbox hurtbox)) continue;
             if (hurtbox.transform.root == transform.root) continue; // non ci si colpisce da soli
             if (!alreadyHit.Add(hurtbox)) continue;                 // già colpita da questo attacco
-            hurtbox.ReceiveHit(attack, transform);
+            HitResult result = hurtbox.ReceiveHit(attack, transform);
+            OnContact?.Invoke(attack, result);
         }
     }
 

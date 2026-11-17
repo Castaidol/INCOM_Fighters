@@ -36,6 +36,12 @@ public class FighterCombat : MonoBehaviour
     /// <summary>Frame dell'attacco in corso, da 1 a TotalFrames.</summary>
     public int CurrentFrame => frame;
 
+    /// <summary>È partito un attacco (anche dentro una combo).</summary>
+    public event System.Action<AttackData> OnAttackStarted;
+
+    /// <summary>Un attacco è finito senza toccare niente.</summary>
+    public event System.Action<AttackData> OnWhiff;
+
     void Awake()
     {
         input = GetComponent<FighterInput>();
@@ -76,6 +82,7 @@ public class FighterCombat : MonoBehaviour
         State = FighterState.Attack;
         hitbox.Begin(attack);
         animator.CrossFadeInFixedTime(attack.stateName, crossFade);
+        OnAttackStarted?.Invoke(attack);
         TickAttack(); // questo è già il frame 1 dell'attacco
     }
 
@@ -102,6 +109,7 @@ public class FighterCombat : MonoBehaviour
 
     void EndAttack()
     {
+        if (!hitbox.HasHit) OnWhiff?.Invoke(current);
         hitbox.End();
         current = null;
         State = FighterState.Idle;

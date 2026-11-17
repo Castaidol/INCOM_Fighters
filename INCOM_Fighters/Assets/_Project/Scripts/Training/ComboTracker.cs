@@ -3,7 +3,8 @@ using UnityEngine;
 /// <summary>
 /// Conta le combo vere sul manichino: un colpo continua la combo solo se arriva mentre il manichino
 /// è ancora in hitstun. Una sequenza di tasti giusta ma troppo lenta non è una combo.
-/// A fine combo lancia OnComboEnded (nella sessione 6 lo userà l'HUD) e la scrive in Console.
+/// A fine combo lancia OnComboEnded (nella sessione 6 lo userà l'HUD) e la scrive in Console;
+/// segnala anche i colpi parati.
 /// </summary>
 [RequireComponent(typeof(TrainingDummy))]
 public class ComboTracker : MonoBehaviour
@@ -28,12 +29,14 @@ public class ComboTracker : MonoBehaviour
     {
         dummy.OnHitTaken += CountHit;
         dummy.OnRecovered += EndCombo;
+        dummy.OnBlocked += LogBlock;
     }
 
     void OnDisable()
     {
         dummy.OnHitTaken -= CountHit;
         dummy.OnRecovered -= EndCombo;
+        dummy.OnBlocked -= LogBlock;
     }
 
     void CountHit(AttackData attack, bool comboHit)
@@ -46,6 +49,11 @@ public class ComboTracker : MonoBehaviour
         }
         Hits++;
         Damage += attack.damage;
+    }
+
+    void LogBlock(AttackData attack)
+    {
+        Debug.Log($"{attack.name} parato");
     }
 
     void EndCombo()
