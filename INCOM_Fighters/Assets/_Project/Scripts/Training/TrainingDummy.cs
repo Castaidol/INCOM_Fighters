@@ -41,6 +41,12 @@ public class TrainingDummy : MonoBehaviour
 
     public DummyState State { get; private set; } = DummyState.Idle;
 
+    /// <summary>Colpo ricevuto. Il bool è true se il manichino era ancora in hitstun: il colpo continua una combo.</summary>
+    public event System.Action<AttackData, bool> OnHitTaken;
+
+    /// <summary>Il manichino è tornato in guardia: la combo, se c'era, è finita.</summary>
+    public event System.Action OnRecovered;
+
     /// <summary>Frame di hitstun ancora da subire.</summary>
     public int HitstunLeft => hitstunLeft;
 
@@ -66,6 +72,9 @@ public class TrainingDummy : MonoBehaviour
 
     void HandleHit(AttackData attack, Transform attacker)
     {
+        // Si guarda lo stato PRIMA di aggiornarlo: se era ancora in Hit, questo colpo continua la combo.
+        bool comboHit = State == DummyState.Hit;
+
         // Un nuovo colpo fa ripartire tutto: hitstun, knockback e animazione.
         State = DummyState.Hit;
         hitstunLeft = attack.hitstun;
@@ -79,6 +88,8 @@ public class TrainingDummy : MonoBehaviour
 
         // Play dal tempo 0: due colpi ravvicinati mostrano due reazioni, non una sola.
         animator.Play(hitState, 0, 0f);
+
+        OnHitTaken?.Invoke(attack, comboHit);
     }
 
     void FixedUpdate()
@@ -94,6 +105,7 @@ public class TrainingDummy : MonoBehaviour
             {
                 State = DummyState.Idle;
                 animator.CrossFadeInFixedTime(idleState, crossFade);
+                OnRecovered?.Invoke();
             }
         }
 
@@ -124,11 +136,13 @@ public class TrainingDummy : MonoBehaviour
     /// <summary>Torna subito in guardia, senza hitstun né knockback. Lo usa il reset del TrainingManager.</summary>
     public void ResetState()
     {
+        bool wasHit = State == DummyState.Hit;
         State = DummyState.Idle;
         hitstunLeft = 0;
         knockbackLeft = 0;
         attackerMovement = null;
         framesSinceHit = regenDelay;
         animator.Play(idleState, 0, 0f);
+        if (wasHit) OnRecovered?.Invoke();
     }
 }

@@ -16,6 +16,9 @@ public class Hitbox : MonoBehaviour
     Vector3 center;
     bool isActive;
 
+    /// <summary>True se l'attacco in corso ha già toccato almeno una hurtbox: serve per continuare la combo.</summary>
+    public bool HasHit => alreadyHit.Count > 0;
+
     /// <summary>Inizio di un nuovo attacco: dimentica chi è stato colpito da quello precedente.</summary>
     public void Begin(AttackData data)
     {

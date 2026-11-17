@@ -1,30 +1,43 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
 
+/// <summary>Tasto d'attacco nel buffer.</summary>
+public enum AttackButton { None, Light, Heavy }
+
 /// <summary>
 /// Unico script del gioco che conosce l'Input System.
 /// Legge la action map "Fighter" dal PlayerInput e la traduce in comandi semplici:
 /// gli altri componenti li usano senza sapere se arrivano da joypad, tastiera o (in futuro) da un'IA.
 /// </summary>
+// Il buffer invecchia prima che FighterCombat lo legga: ogni pugno resta valido esattamente bufferFrames frame.
+[DefaultExecutionOrder(-20)]
 [RequireComponent(typeof(PlayerInput))]
 public class FighterInput : MonoBehaviour
 {
     [Tooltip("Sotto questo valore lo stick è considerato fermo.")]
     [SerializeField, Range(0f, 0.9f)] float deadZone = 0.4f; // SFIDA S1: dead zone regolabile
 
+    [Tooltip("Per quanti frame (60 al secondo) un pugno premuto resta valido.")]
+    [SerializeField, Range(1, 20)] int bufferFrames = 8;
+
     InputAction moveAction;
     InputAction lightAction;
     InputAction heavyAction;
     InputAction resetAction;
 
-    // Le pressioni arrivano in Update, ma il combattimento le usa in FixedUpdate:
-    // restano "in attesa" finché qualcuno non le consuma.
-    bool lightQueued;
-    bool heavyQueued;
+    // Input buffer: un solo posto. L'ultimo pugno premuto sostituisce il precedente
+    // e resta valido per bufferFrames frame, finché FighterCombat non lo usa.
+    AttackButton buffered;
+    int bufferAge;
+
+    // Il reset non ha bisogno di buffer: resta in attesa finché qualcuno non lo consuma.
     bool resetQueued;
 
     /// <summary>Direzione orizzontale nel mondo: -1 sinistra, 0 fermo, +1 destra.</summary>
     public float Horizontal { get; private set; }
+
+    /// <summary>Ultimo pugno premuto e non ancora usato (None se il buffer è vuoto o è scaduto).</summary>
+    public AttackButton BufferedButton => buffered;
 
     void Awake()
     {
@@ -43,25 +56,30 @@ public class FighterInput : MonoBehaviour
         // In un picchiaduro la camminata è digitale: o si cammina a velocità piena o si sta fermi.
         Horizontal = Mathf.Abs(x) < deadZone ? 0f : Mathf.Sign(x);
 
-        if (lightAction.WasPressedThisFrame()) lightQueued = true;
-        if (heavyAction.WasPressedThisFrame()) heavyQueued = true;
+        // Le pressioni arrivano in Update; il combattimento le legge in FixedUpdate dal buffer.
+        if (lightAction.WasPressedThisFrame()) Buffer(AttackButton.Light);
+        if (heavyAction.WasPressedThisFrame()) Buffer(AttackButton.Heavy);
         if (resetAction.WasPressedThisFrame()) resetQueued = true;
     }
 
-    /// <summary>True una sola volta per ogni pressione del pugno leggero.</summary>
-    public bool ConsumeLight()
+    void FixedUpdate()
     {
-        bool pressed = lightQueued;
-        lightQueued = false;
-        return pressed;
+        // Un FixedUpdate è un frame: il pugno nel buffer invecchia di uno e dopo bufferFrames scade.
+        if (buffered == AttackButton.None) return;
+        bufferAge++;
+        if (bufferAge > bufferFrames) buffered = AttackButton.None;
     }
 
-    /// <summary>True una sola volta per ogni pressione del pugno pesante.</summary>
-    public bool ConsumeHeavy()
+    void Buffer(AttackButton button)
     {
-        bool pressed = heavyQueued;
-        heavyQueued = false;
-        return pressed;
+        buffered = button;
+        bufferAge = 0;
+    }
+
+    /// <summary>Svuota il buffer: chi ha usato il pugno lo chiama, così vale una volta sola.</summary>
+    public void ConsumeBuffer()
+    {
+        buffered = AttackButton.None;
     }
 
     /// <summary>True una sola volta per ogni pressione di Reset (View/Select o R).</summary>
