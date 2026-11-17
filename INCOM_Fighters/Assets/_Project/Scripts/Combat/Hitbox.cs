@@ -16,6 +16,9 @@ public class Hitbox : MonoBehaviour
     Vector3 center;
     bool isActive;
 
+    // TODO 5c (sessione 4): public bool HasHit, vero se l'attacco in corso ha già toccato almeno una hurtbox
+    //   (alreadyHit non è vuoto). Serve per continuare la combo solo a contatto.
+
     /// <summary>Inizio di un nuovo attacco: dimentica chi è stato colpito da quello precedente.</summary>
     public void Begin(AttackData data)
     {

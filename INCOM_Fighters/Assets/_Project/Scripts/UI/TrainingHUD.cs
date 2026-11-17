@@ -15,12 +15,12 @@ public class TrainingHUD : MonoBehaviour
 
     void OnEnable()
     {
-        // TODO 8a: iscriviti a dummyHealth.OnChanged con ShowDummyHealth.
+        dummyHealth.OnChanged += ShowDummyHealth;
     }
 
     void OnDisable()
     {
-        // TODO 8a: togli l'iscrizione.
+        dummyHealth.OnChanged -= ShowDummyHealth;
     }
 
     void Start()
@@ -31,7 +31,7 @@ public class TrainingHUD : MonoBehaviour
 
     void ShowDummyHealth(int current, int max)
     {
-        // TODO 8b: imposta dummyHealthFill.fillAmount alla frazione di vita rimasta, da 0 a 1.
-        //   Attenzione: tra due int la divisione dà sempre 0 o 1, serve un (float).
+        // (float): con due int la divisione darebbe sempre 0 o 1.
+        dummyHealthFill.fillAmount = (float)current / max;
     }
 }

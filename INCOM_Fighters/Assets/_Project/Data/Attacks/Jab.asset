@@ -19,3 +19,5 @@ MonoBehaviour:
   hitboxOffset: {x: 0.95, y: 1.38, z: 0}
   hitboxSize: {x: 0.3, y: 0.25, z: 0.5}
   damage: 5
+  hitstun: 16
+  knockback: 0.15

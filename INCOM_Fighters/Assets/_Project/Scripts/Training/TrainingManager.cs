@@ -24,14 +24,15 @@ public class TrainingManager : MonoBehaviour
 
     void Update()
     {
-        // TODO 9e: se playerInput.ConsumeReset() restituisce true, chiama ResetTraining().
+        if (playerInput.ConsumeReset()) ResetTraining();
     }
 
     public void ResetTraining()
     {
-        // TODO 9f: rimetti player e manichino nelle posizioni di partenza (playerStart e dummyStart),
-        //   fai tornare il manichino in guardia con dummy.ResetState()
-        //   e riporta la sua vita al massimo con RestoreFull().
+        player.position = playerStart;
+        dummy.transform.position = dummyStart;
+        dummy.ResetState();
+        dummyHealth.RestoreFull();
         Debug.Log("Allenamento: reset delle posizioni e della vita");
     }
 }

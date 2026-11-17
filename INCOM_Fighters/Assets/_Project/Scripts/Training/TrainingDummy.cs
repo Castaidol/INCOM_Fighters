@@ -36,9 +36,14 @@ public class TrainingDummy : MonoBehaviour
     int hitstunLeft;
     int knockbackLeft;
     float knockbackStep;
+    FighterMovement attackerMovement;
     int framesSinceHit;
 
     public DummyState State { get; private set; } = DummyState.Idle;
+
+    // TODO 6a (sessione 4): due eventi pubblici per il ComboTracker:
+    //   - OnHitTaken, di tipo System.Action<AttackData, bool>: il colpo ricevuto e se il manichino era ancora in hitstun
+    //   - OnRecovered, di tipo System.Action: il manichino è tornato in guardia, la combo è finita
 
     /// <summary>Frame di hitstun ancora da subire.</summary>
     public int HitstunLeft => hitstunLeft;
@@ -55,49 +60,73 @@ public class TrainingDummy : MonoBehaviour
 
     void OnEnable()
     {
-        // TODO 5a: iscriviti all'evento OnHit della hurtbox, con HandleHit come metodo da chiamare.
+        hurtbox.OnHit += HandleHit;
     }
 
     void OnDisable()
     {
-        // TODO 5a: togli l'iscrizione (-=), come fa DamageLogger con Health.
+        hurtbox.OnHit -= HandleHit;
     }
 
-    /// <summary>Chiamato dalla Hurtbox a ogni colpo ricevuto.</summary>
     void HandleHit(AttackData attack, Transform attacker)
     {
-        // TODO 5b: un nuovo colpo fa ripartire la reazione:
-        //   - State = DummyState.Hit
-        //   - hitstunLeft = l'hitstun dell'attacco
-        //   - framesSinceHit = 0 (serve alla rigenerazione, passo 7)
-        //   - animator.Play(hitState, 0, 0f): Play dal tempo 0, non CrossFade,
-        //     così due colpi ravvicinati mostrano due reazioni.
+        // TODO 6b: PRIMA di aggiornare lo stato salva in un bool comboHit se State è già Hit:
+        //   in quel caso il colpo continua una combo. In fondo al metodo lancia OnHitTaken(attack, comboHit).
 
-        // TODO 6a: il knockback allontana dall'attaccante ed è distribuito su knockbackFrames frame:
-        //   - direzione = Mathf.Sign(transform.position.x - attacker.position.x)
-        //   - knockbackStep = direzione * knockback dell'attacco / knockbackFrames
-        //   - knockbackLeft = knockbackFrames
+        // Un nuovo colpo fa ripartire tutto: hitstun, knockback e animazione.
+        State = DummyState.Hit;
+        hitstunLeft = attack.hitstun;
+        framesSinceHit = 0;
+
+        // Il knockback allontana dall'attaccante ed è distribuito sui primi frame dell'hitstun.
+        float direction = Mathf.Sign(transform.position.x - attacker.position.x);
+        knockbackStep = direction * attack.knockback / knockbackFrames;
+        knockbackLeft = knockbackFrames;
+        attacker.TryGetComponent(out attackerMovement);
+
+        // Play dal tempo 0: due colpi ravvicinati mostrano due reazioni, non una sola.
+        animator.Play(hitState, 0, 0f);
     }
 
     void FixedUpdate()
     {
         if (knockbackLeft > 0) ApplyKnockback();
 
-        // TODO 5c: se lo stato è Hit: finché hitstunLeft è maggiore di 0, togline uno;
-        //   quando è già 0, State = DummyState.Idle e animator.CrossFadeInFixedTime(idleState, crossFade).
-        //   Si torna in guardia anche se la clip GetHit non è finita: decide il contatore.
+        if (State == DummyState.Hit)
+        {
+            // Finché restano frame di hitstun se ne consuma uno; quando sono finiti si torna in guardia,
+            // anche se la clip GetHit non è arrivata in fondo.
+            if (hitstunLeft > 0) hitstunLeft--;
+            else
+            {
+                State = DummyState.Idle;
+                animator.CrossFadeInFixedTime(idleState, crossFade);
+                // TODO 6c: il manichino è tornato in guardia: lancia OnRecovered.
+            }
+        }
 
-        // TODO 7: rigenerazione. Se framesSinceHit è minore di regenDelay, aumentalo di 1;
-        //   quando diventa uguale a regenDelay chiama health.RestoreFull().
+        // Rigenerazione: se lo si lascia stare per regenDelay frame, la vita torna piena.
+        if (framesSinceHit < regenDelay)
+        {
+            framesSinceHit++;
+            if (framesSinceHit == regenDelay) health.RestoreFull();
+        }
     }
 
     void ApplyKnockback()
     {
         knockbackLeft--;
 
-        // TODO 6b: sposta il manichino di knockbackStep lungo X, senza uscire dall'arena:
-        //   Mathf.Clamp tra arena.MinX + pushbox.HalfWidth e arena.MaxX - pushbox.HalfWidth
-        //   (se arena è null, niente Clamp).
+        Vector3 pos = transform.position;
+        float wanted = pos.x + knockbackStep;
+        pos.x = arena != null
+            ? Mathf.Clamp(wanted, arena.MinX + pushbox.HalfWidth, arena.MaxX - pushbox.HalfWidth)
+            : wanted;
+        transform.position = pos;
+
+        // SFIDA S3: se il muro ferma il manichino, la spinta che avanza respinge l'attaccante.
+        float blocked = wanted - pos.x;
+        if (blocked != 0f && attackerMovement != null) attackerMovement.Push(-blocked);
     }
 
     /// <summary>Torna subito in guardia, senza hitstun né knockback. Lo usa il reset del TrainingManager.</summary>
@@ -106,7 +135,9 @@ public class TrainingDummy : MonoBehaviour
         State = DummyState.Idle;
         hitstunLeft = 0;
         knockbackLeft = 0;
+        attackerMovement = null;
         framesSinceHit = regenDelay;
         animator.Play(idleState, 0, 0f);
+        // TODO 6c: se prima del reset il manichino era in Hit, lancia anche qui OnRecovered (la combo si chiude).
     }
 }

@@ -6,11 +6,12 @@ public enum FighterState { Idle, Walk, Attack }
 /// <summary>
 /// Esegue gli attacchi contando i frame in FixedUpdate (Fixed Timestep = 1/60: un FixedUpdate = un frame).
 /// L'Animator mostra soltanto: è il codice a decidere quando l'attacco inizia, quando colpisce e quando finisce.
+/// Le combo seguono l'albero scritto negli AttackData (nextOnLight, nextOnHeavy).
 /// </summary>
 [RequireComponent(typeof(FighterInput), typeof(FighterMovement), typeof(Hitbox))]
 public class FighterCombat : MonoBehaviour
 {
-    [Header("Attacchi")]
+    [Header("Attacchi di partenza")]
     [SerializeField] AttackData lightAttack;
     [SerializeField] AttackData heavyAttack;
 
@@ -45,21 +46,26 @@ public class FighterCombat : MonoBehaviour
 
     void FixedUpdate()
     {
-        // Le pressioni si consumano a ogni frame: quelle arrivate durante un attacco vanno perse.
-        // Nella sessione 4 un buffer le terrà per qualche frame, per le combo.
-        bool light = input.ConsumeLight();
-        bool heavy = input.ConsumeHeavy();
-
         if (State == FighterState.Attack)
         {
             TickAttack();
             return;
         }
 
-        if (light && lightAttack != null) StartAttack(lightAttack);
-        else if (heavy && heavyAttack != null) StartAttack(heavyAttack);
-        else State = input.Horizontal != 0f ? FighterState.Walk : FighterState.Idle;
+        // TODO 5a (sessione 4): libero, un pugno nel buffer fa partire l'attacco di partenza di quel tasto.
+        //   AttackData attack = AttackFor(input.BufferedButton);
+        //   Se attack non è null: input.ConsumeBuffer() e StartAttack(attack).
+        //   Altrimenti, come prima, Walk o Idle secondo input.Horizontal (la riga qui sotto).
+        State = input.Horizontal != 0f ? FighterState.Walk : FighterState.Idle;
     }
+
+    /// <summary>L'attacco di partenza per quel tasto, o null.</summary>
+    AttackData AttackFor(AttackButton button) => button switch
+    {
+        AttackButton.Light => lightAttack,
+        AttackButton.Heavy => heavyAttack,
+        _ => null,
+    };
 
     void StartAttack(AttackData attack)
     {
@@ -75,6 +81,12 @@ public class FighterCombat : MonoBehaviour
     {
         frame++;
         hitbox.Tick(current.IsActiveFrame(frame), movement.Facing);
+
+        // TODO 5b: finestra di combo. Se current.IsInComboWindow(frame) e hitbox.HasHit sono veri,
+        //   chiedi all'attacco il seguito per il tasto nel buffer: current.NextFor(input.BufferedButton).
+        //   Se c'è: input.ConsumeBuffer(), StartAttack(seguito) e return (il resto del recovery si salta).
+        //   Va fatto PRIMA del controllo qui sotto, che chiude l'attacco all'ultimo frame.
+
         if (frame >= current.TotalFrames) EndAttack();
     }
 
