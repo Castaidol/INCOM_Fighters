@@ -27,10 +27,14 @@ public class AttackData : ScriptableObject
     [Min(0)] public int damage = 5;
     [Tooltip("Frame in cui chi viene colpito resta bloccato nella reazione.")]
     [Min(0)] public int hitstun = 16;
-    // TODO 1a (sessione 5): il campo blockstun (int, [Min(0)], 10 di default, con un [Tooltip]):
-    //   frame in cui chi para resta bloccato nella parata.
+    [Tooltip("Frame in cui chi para resta bloccato nella parata.")]
+    [Min(0)] public int blockstun = 10;
     [Tooltip("Metri di cui chi viene colpito arretra.")]
     [Min(0f)] public float knockback = 0.15f;
+
+    // TODO 1 (sessione 6): sotto un [Header("Peso del colpo")] due campi pubblici, ognuno con il suo Tooltip:
+    //   int hitstop, i frame in cui attaccante e colpito si fermano all'impatto ([Min(0)], 5 di partenza),
+    //   e AudioClip hitSound, il suono quando il colpo va a segno.
 
     [Header("Combo")]
     [Tooltip("Frame da cui un pugno nel buffer fa partire il colpo successivo; la finestra dura fino all'ultimo frame. 0 = nessuna finestra.")]
@@ -46,10 +50,14 @@ public class AttackData : ScriptableObject
     /// <summary>I frame si contano da 1: i primi "startup" preparano, poi "active" frame possono colpire.</summary>
     public bool IsActiveFrame(int frame) => frame > startup && frame <= startup + active;
 
-    // TODO 1b: tre proprietà calcolate, con il colpo a segno sul primo frame attivo:
-    //   - public int FramesAfterHit => frame dell'attaccante dopo il colpo: active - 1 + recovery
-    //   - public int AdvantageOnHit => hitstun - FramesAfterHit
-    //   - public int AdvantageOnBlock => blockstun - FramesAfterHit
+    /// <summary>Frame dell'attaccante dopo il colpo, se colpisce sul primo frame attivo.</summary>
+    public int FramesAfterHit => active - 1 + recovery;
+
+    /// <summary>Vantaggio in frame a segno: positivo se l'attaccante torna libero prima di chi è colpito.</summary>
+    public int AdvantageOnHit => hitstun - FramesAfterHit;
+
+    /// <summary>Vantaggio in frame in parata: negativo vuol dire che chi para torna libero prima.</summary>
+    public int AdvantageOnBlock => blockstun - FramesAfterHit;
 
     /// <summary>True dal frame comboWindowStart fino all'ultimo frame dell'attacco.</summary>
     public bool IsInComboWindow(int frame) => comboWindowStart > 0 && frame >= comboWindowStart && frame <= TotalFrames;

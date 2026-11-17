@@ -20,6 +20,9 @@ public class FighterInput : MonoBehaviour
     [Tooltip("Per quanti frame (60 al secondo) un pugno premuto resta valido.")]
     [SerializeField, Range(1, 20)] int bufferFrames = 8;
 
+    // TODO 2h (sessione 6): un campo [SerializeField] HitStop hitStop, con il Tooltip
+    //   "Durante l'hitstop il buffer non invecchia: il pugno premuto resta valido per quando il gioco riparte."
+
     InputAction moveAction;
     InputAction lightAction;
     InputAction heavyAction;
@@ -38,6 +41,9 @@ public class FighterInput : MonoBehaviour
 
     /// <summary>Ultimo pugno premuto e non ancora usato (None se il buffer è vuoto o è scaduto).</summary>
     public AttackButton BufferedButton => buffered;
+
+    // TODO 7a (facoltativo): un evento pubblico OnAttackPressed di tipo System.Action<AttackButton>:
+    //   è stato premuto un pugno (lo usa l'input display). Si lancia in Buffer.
 
     void Awake()
     {
@@ -66,6 +72,7 @@ public class FighterInput : MonoBehaviour
     {
         // Un FixedUpdate è un frame: il pugno nel buffer invecchia di uno e dopo bufferFrames scade.
         if (buffered == AttackButton.None) return;
+        // TODO 2h: durante l'hitstop (hitStop non null e IsFrozen vero) esci: il pugno nel buffer non invecchia.
         bufferAge++;
         if (bufferAge > bufferFrames) buffered = AttackButton.None;
     }
@@ -74,6 +81,7 @@ public class FighterInput : MonoBehaviour
     {
         buffered = button;
         bufferAge = 0;
+        // TODO 7a: lancia OnAttackPressed con il tasto premuto.
     }
 
     /// <summary>Svuota il buffer: chi ha usato il pugno lo chiama, così vale una volta sola.</summary>

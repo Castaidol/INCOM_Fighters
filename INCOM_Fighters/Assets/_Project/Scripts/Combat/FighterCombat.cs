@@ -21,6 +21,9 @@ public class FighterCombat : MonoBehaviour
     [Tooltip("Secondi di dissolvenza tra le animazioni.")]
     [SerializeField] float crossFade = 0.05f;
 
+    // TODO 2f (sessione 6): un campo [SerializeField] HitStop hitStop, con il Tooltip
+    //   "Durante l'hitstop il combattente non conta i suoi frame."
+
     FighterInput input;
     FighterMovement movement;
     Hitbox hitbox;
@@ -36,9 +39,11 @@ public class FighterCombat : MonoBehaviour
     /// <summary>Frame dell'attacco in corso, da 1 a TotalFrames.</summary>
     public int CurrentFrame => frame;
 
-    // TODO 8a (sessione 5): due eventi pubblici di tipo System.Action<AttackData> per l'HUD:
-    //   - OnAttackStarted, lanciato in StartAttack subito dopo il CrossFade (anche dentro una combo)
-    //   - OnWhiff, lanciato all'inizio di EndAttack se hitbox.HasHit è falso (l'attacco non ha toccato niente)
+    /// <summary>È partito un attacco (anche dentro una combo).</summary>
+    public event System.Action<AttackData> OnAttackStarted;
+
+    /// <summary>Un attacco è finito senza toccare niente.</summary>
+    public event System.Action<AttackData> OnWhiff;
 
     void Awake()
     {
@@ -50,6 +55,8 @@ public class FighterCombat : MonoBehaviour
 
     void FixedUpdate()
     {
+        // TODO 2f: hitstop. Se hitStop non è null e IsFrozen è vero esci subito: questo frame per il combattente non esiste.
+
         if (State == FighterState.Attack)
         {
             TickAttack();
@@ -80,6 +87,7 @@ public class FighterCombat : MonoBehaviour
         State = FighterState.Attack;
         hitbox.Begin(attack);
         animator.CrossFadeInFixedTime(attack.stateName, crossFade);
+        OnAttackStarted?.Invoke(attack);
         TickAttack(); // questo è già il frame 1 dell'attacco
     }
 
@@ -106,6 +114,7 @@ public class FighterCombat : MonoBehaviour
 
     void EndAttack()
     {
+        if (!hitbox.HasHit) OnWhiff?.Invoke(current);
         hitbox.End();
         current = null;
         State = FighterState.Idle;

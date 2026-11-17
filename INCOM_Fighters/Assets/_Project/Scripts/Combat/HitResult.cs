@@ -18,7 +18,5 @@ public enum HitResult
 /// </summary>
 public interface IHitReceiver
 {
-    // TODO 3a (sessione 5): dichiara il metodo che la Hurtbox chiamerà:
-    //   HitResult ReceiveHit(AttackData attack, Transform attacker);
-    //   In un'interfaccia si scrive solo la firma, senza corpo: chi la implementa deve avere questo metodo pubblico.
+    HitResult ReceiveHit(AttackData attack, Transform attacker);
 }

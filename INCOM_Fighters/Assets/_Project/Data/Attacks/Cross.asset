@@ -20,6 +20,7 @@ MonoBehaviour:
   hitboxSize: {x: 0.3, y: 0.25, z: 0.5}
   damage: 7
   hitstun: 18
+  blockstun: 12
   knockback: 0.2
   comboWindowStart: 8
   nextOnLight: {fileID: 11400000, guid: 5337d2c5249ab3b478e795c244a333f8, type: 2}

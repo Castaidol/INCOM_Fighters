@@ -2,9 +2,9 @@ using UnityEngine;
 using UnityEngine.UI;
 
 /// <summary>
-/// HUD dell'allenamento: la barra vita del manichino e i frame data dell'ultimo attacco del player.
-/// Ascolta solo eventi: Health.OnChanged per la barra, FighterCombat e Hitbox per i frame data.
-/// Nella sessione 6 si aggiunge il contatore combo.
+/// HUD dell'allenamento: la barra vita del manichino, i frame data dell'ultimo attacco del player,
+/// il contatore combo e la scritta PARATO, che svaniscono con una dissolvenza.
+/// Ascolta solo eventi: Health.OnChanged, FighterCombat, Hitbox e ComboTracker.
 /// </summary>
 public class TrainingHUD : MonoBehaviour
 {
@@ -20,31 +20,80 @@ public class TrainingHUD : MonoBehaviour
     [Tooltip("Com'è andato l'ultimo colpo: A SEGNO, PARATO, IGNORATO o A VUOTO.")]
     [SerializeField] Text resultText;
 
+    [Header("Contatore combo")]
+    [SerializeField] ComboTracker comboTracker;
+    [SerializeField] CanvasGroup comboGroup;
+    [SerializeField] Text comboText;
+
+    [Header("Scritta PARATO")]
+    [SerializeField] CanvasGroup blockedGroup;
+
+    [Header("Dissolvenza")]
+    [Tooltip("Secondi in cui la scritta resta piena prima di svanire.")]
+    [SerializeField] float holdSeconds = 1f;
+    [Tooltip("Secondi della dissolvenza.")]
+    [SerializeField] float fadeSeconds = 0.5f;
+
     Hitbox playerHitbox;
+    bool comboRunning;
+    float comboTimer;   // secondi dalla fine della combo
+    float blockedTimer; // secondi dall'ultima parata
 
     void Awake()
     {
-        // TODO 8b (sessione 5): playerHitbox = la Hitbox del player (player.GetComponent<Hitbox>()).
+        playerHitbox = player.GetComponent<Hitbox>();
     }
 
     void OnEnable()
     {
         dummyHealth.OnChanged += ShowDummyHealth;
-        // TODO 8b: iscriviti a player.OnAttackStarted (ShowAttack), player.OnWhiff (ShowWhiff)
-        //   e playerHitbox.OnContact (ShowContact).
+        player.OnAttackStarted += ShowAttack;
+        player.OnWhiff += ShowWhiff;
+        playerHitbox.OnContact += ShowContact;
+        // TODO 6b (sessione 6): iscriviti a comboTracker.OnComboChanged (ShowCombo) e a comboTracker.OnComboEnded (EndCombo).
     }
 
     void OnDisable()
     {
         dummyHealth.OnChanged -= ShowDummyHealth;
-        // TODO 8b: togli le tre iscrizioni.
+        player.OnAttackStarted -= ShowAttack;
+        player.OnWhiff -= ShowWhiff;
+        playerHitbox.OnContact -= ShowContact;
+        // TODO 6b: togli le due iscrizioni.
     }
 
     void Start()
     {
         // All'avvio nessun evento è ancora arrivato: si parte dal valore attuale.
         ShowDummyHealth(dummyHealth.Current, dummyHealth.Max);
-        // TODO 8b: scrivi in frameDataText "Tira un pugno per vedere i suoi frame data" e svuota resultText.
+        frameDataText.text = "Tira un pugno per vedere i suoi frame data";
+        resultText.text = "";
+
+        // TODO 6c: contatore e PARATO partono già svaniti: comboTimer e blockedTimer valgono holdSeconds + fadeSeconds
+        //   e l'alpha dei due CanvasGroup è 0.
+    }
+
+    // TODO 6d: aggiungi Update. Le dissolvenze usano il tempo normale (Time.deltaTime), così l'hitstop non le ferma.
+    //   Se la combo non è in corso, comboTimer aumenta e comboGroup.alpha = FadeOut(comboTimer).
+    //   blockedTimer aumenta sempre e blockedGroup.alpha = FadeOut(blockedTimer).
+
+    /// <summary>1 per holdSeconds secondi, poi scende a 0 in fadeSeconds secondi.</summary>
+    float FadeOut(float seconds)
+    {
+        // TODO 6d: restituisci 1 meno quanto è avanzata la dissolvenza: (seconds - holdSeconds) / fadeSeconds,
+        //   tenuto tra 0 e 1 con Mathf.Clamp01. Prima di holdSeconds vale 1, dopo holdSeconds + fadeSeconds vale 0.
+        return 1f;
+    }
+
+    void ShowCombo(int hits, int damage)
+    {
+        // TODO 6e: la combo è in corso: comboRunning vero, comboGroup.alpha a 1 e in comboText i colpi e,
+        //   su una seconda riga più piccola, il danno: $"{hits} COLPI\n<size=30>{damage} danni</size>".
+    }
+
+    void EndCombo(int hits, int damage)
+    {
+        // TODO 6e: la combo è finita: comboRunning falso e comboTimer a 0. Il contatore resta ancora un attimo, poi svanisce.
     }
 
     void ShowDummyHealth(int current, int max)
@@ -55,20 +104,27 @@ public class TrainingHUD : MonoBehaviour
 
     void ShowAttack(AttackData attack)
     {
-        // TODO 8c: in frameDataText su due righe (\n) il nome dell'attacco, startup, active e recovery,
-        //   poi "a segno" con Signed(attack.AdvantageOnHit) e "in parata" con Signed(attack.AdvantageOnBlock).
-        //   Svuota resultText: l'esito arriva dopo.
+        // Il vantaggio viene dai dati: colpo sul primo frame attivo, hitstun o blockstun meno i frame che restano.
+        frameDataText.text =
+            $"<b>{attack.name}</b>   startup {attack.startup}   active {attack.active}   recovery {attack.recovery}\n" +
+            $"a segno {Signed(attack.AdvantageOnHit)}   in parata {Signed(attack.AdvantageOnBlock)}";
+        resultText.text = "";
     }
 
     void ShowContact(AttackData attack, HitResult result)
     {
-        // TODO 8d: in resultText "A SEGNO" per Hit, "PARATO" per Blocked e "IGNORATO" per Ignored.
-        //   Con il rich text puoi colorarli, per esempio "<color=#6FB7FF>PARATO</color>".
+        resultText.text = result switch
+        {
+            HitResult.Hit => "<color=#FFD24D>A SEGNO</color>",
+            HitResult.Blocked => "<color=#6FB7FF>PARATO</color>",
+            _ => "<color=#A0A0A0>IGNORATO</color>",
+        };
+        // TODO 6e: se il colpo è parato azzera blockedTimer: la scritta PARATO riappare piena.
     }
 
     void ShowWhiff(AttackData attack)
     {
-        // TODO 8d: in resultText "A VUOTO".
+        resultText.text = "<color=#A0A0A0>A VUOTO</color>";
     }
 
     /// <summary>+5 in verde, -3 in rosso: a colpo d'occhio chi torna libero prima.</summary>

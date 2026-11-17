@@ -1,75 +1,79 @@
-# INCOM Fighters — Sessione 5
+# INCOM Fighters — Sessione 6
 
-**Obiettivo:** scegli dall'Inspector come si comporta il manichino, anche durante il Play. Con «Para sempre» sta in guardia, con «Para dopo il primo colpo» lascia passare le combo vere e para quelle con un buco. Con la vita «Normale» va KO e si rialza. Un pannello in basso a sinistra mostra i frame data dell'ultimo attacco, il vantaggio a segno e in parata e com'è andato il colpo.
+**Obiettivo:** ogni colpo si deve sentire. All'impatto player e manichino si fermano per qualche frame (hitstop), la camera trema, nel punto d'impatto compaiono le scintille e si sente un suono, diverso per colpo leggero, colpo pesante e parata. Sotto la barra del manichino il contatore mostra i colpi e il danno della combo e poi svanisce; quando il manichino para compare la scritta PARATO. Se avanza tempo, a sinistra l'input display mostra gli ultimi comandi con i frame passati tra l'uno e l'altro.
 
 ## Da dove parti
 
-- **Hai finito la sessione 4 nel tuo progetto:** importa `INCOM_Fighters/Pacchetti/Sessione5.unitypackage` (Assets > Import Package > Custom Package…, importa tutto). Aggiunge `HitResult.cs` (in `Scripts/Combat`, con il TODO 3a) e `TrainingSettings.cs` (in `Scripts/Training`, già completo). Le modifiche agli altri script le scrivi tu, seguendo le istruzioni qui sotto. Il `TrainingDummy` cambia molto: se preferisci, copia `TrainingDummy.cs` da questo branch, che contiene la soluzione delle sessioni 3 e 4 con i TODO di questa sessione.
-- **Sei rimasto indietro:** usa questo branch. Contiene la soluzione della sessione 4 e trovi già i TODO in tutti gli script da modificare.
+- **Hai finito la sessione 5 nel tuo progetto:** importa `INCOM_Fighters/Pacchetti/Sessione6.unitypackage` (Assets > Import Package > Custom Package…, importa tutto). Aggiunge `HitStop.cs` e `HitFeedback.cs` (in `Scripts/Feedback`) e `InputDisplay.cs` (in `Scripts/UI`), tutti con i TODO, i suoni in `Audio` e gli effetti in `Prefabs/FX`. Le modifiche agli altri script le scrivi tu, seguendo le istruzioni qui sotto. Se preferisci, copia `TrainingHUD.cs` da questo branch: contiene la soluzione della sessione 5 con i campi nuovi e i TODO di questa sessione.
+- **Sei rimasto indietro:** usa questo branch. Contiene la soluzione della sessione 5 e trovi già i TODO in tutti gli script da modificare.
 
 ## Cosa trovi già pronto
 
-- Le clip del manichino in `Assets/PartyMonsterRumblePBR/Animation`: `Defense` (in loop), `DefenseHit`, `Die01` e `Die01Recover`.
-- `TrainingSettings` completo, con le opzioni in italiano nell'Inspector.
-- In questo branch: gli stati e i campi nuovi del `TrainingDummy` e il metodo `Signed` del `TrainingHUD`, che colora il vantaggio. Cerca i commenti `TODO`: il numero corrisponde al passo qui sotto.
+- Tre suoni in `Assets/_Project/Audio`: `Pugno_Leggero`, `Pugno_Pesante` e `Parata`.
+- Due effetti in `Assets/_Project/Prefabs/FX`: `FX_Colpo` (scintille) e `FX_Parata` (energia azzurra). Sono varianti degli effetti Synty senza loop: una sola esplosione e poi più niente.
+- Nei tre script nuovi i campi e i metodi da completare. In questo branch anche il campo `shakeDuration` e il metodo `Shake` della `FightCamera` e i campi del contatore e della scritta PARATO nel `TrainingHUD`. Cerca i commenti `TODO`: il numero corrisponde al passo qui sotto.
 
-Finché non completi il passo 3 il manichino perde vita ma non reagisce: è normale. All'inizio la console mostra alcuni avvisi gialli per campi non ancora usati, che spariscono man mano che completi i TODO.
+Finché non completi il passo 2 il gioco funziona come alla fine della sessione 5. All'inizio la console mostra alcuni avvisi gialli per campi non ancora usati, che spariscono man mano che completi i TODO.
 
 ## Teoria in breve
 
-- **Vantaggio in frame:** hitstun (o blockstun, se il colpo è parato) meno i frame che restano all'attaccante dopo il colpo (active − 1 + recovery). Positivo: torni libero prima tu. Negativo: torna libero prima chi ha parato, e può punirti.
-- **Parata e blockstun:** un colpo parato non toglie vita, ma blocca chi para per qualche frame e lo spinge un po' indietro.
-- **In hitstun non si para:** per questo le combo vere passano anche contro chi para.
+- **Game feel:** un colpo sembra pesante per tanti piccoli dettagli messi insieme: hitstop, tremolio, effetto e suono. Il danno da solo non si vede.
+- **Hitstop:** all'impatto attaccante e colpito si fermano per qualche frame, di più con i colpi pesanti. Si fermano tutti e due per lo stesso tempo, quindi il vantaggio in frame non cambia.
+- **Perché non `Time.timeScale = 0`:** fermerebbe tutto, anche camera, dissolvenze, particelle e, in futuro, il menu. Qui si fermano solo i combattenti: saltano il loro `FixedUpdate` e i loro Animator vanno a velocità 0.
+- **Un osservatore:** `HitFeedback` ascolta `Hitbox.OnContact` e il combattimento non sa che esiste. Se lo disattivi il gioco funziona lo stesso, solo "muto".
 
 ## Passi
 
-Dopo ogni **Verifica** prova in Play mode, cliccando nella Game view prima di usare la tastiera. Le opzioni del manichino si cambiano dall'Inspector dell'oggetto Training mentre il gioco è in Play.
+Dopo ogni **Verifica** prova in Play mode, cliccando nella Game view prima di usare la tastiera. Comportamento e vita del manichino si cambiano dall'Inspector dell'oggetto `Training`, anche durante il Play.
 
-1. **Blockstun e vantaggio** in `AttackData` (TODO 1a–1b). Aggiungi il campo `blockstun` e le proprietà `FramesAfterHit`, `AdvantageOnHit` e `AdvantageOnBlock`. Poi imposta il blockstun negli asset:
+1. **Peso negli AttackData** (TODO 1). Aggiungi i campi `hitstop` e `hitSound`, poi impostali nei cinque asset di `Data/Attacks`:
 
-   | Asset | Blockstun | A segno | In parata |
-   | --- | --- | --- | --- |
-   | Jab | 10 | +5 | −1 |
-   | Cross | 12 | +4 | −2 |
-   | Hook | 14 | +4 | −4 |
-   | Straight | 14 | +5 | −3 |
-   | Uppercut | 16 | +4 | −8 |
+   | Asset | Hitstop | Hit Sound |
+   | --- | --- | --- |
+   | Jab | 5 | Pugno_Leggero |
+   | Cross | 6 | Pugno_Leggero |
+   | Hook | 8 | Pugno_Pesante |
+   | Straight | 9 | Pugno_Pesante |
+   | Uppercut | 11 | Pugno_Pesante |
 
-2. **TrainingSettings.** Leggi lo script: due enum, `DummyBehavior` e `DummyHealthMode`, con `[InspectorName]` per i nomi in italiano. Aggiungilo all'oggetto `Training` e collegalo al campo Settings del `TrainingDummy`.
-3. **Chi decide com'è andato il colpo.**
-   - In `HitResult.cs` completa l'interfaccia `IHitReceiver` (TODO 3a).
-   - In `Hurtbox` (TODO 3b–3c), in `Awake`, cerca un `IHitReceiver` tra i genitori. In `ReceiveHit`, se c'è decide lui, altrimenti il colpo va a segno come prima. `ReceiveHit` ora restituisce un `HitResult`.
-   - In `Hitbox` (TODO 3d), un evento `OnContact` con l'attacco e il risultato.
-   - Se lavori sul tuo progetto: togli l'evento `OnHit` della Hurtbox. Il `TrainingDummy` non si iscrive più: dichiara `: IHitReceiver` e il suo `HandleHit` diventa `public HitResult ReceiveHit(AttackData attack, Transform attacker)`, che per ora restituisce `HitResult.Hit`.
-   - **Verifica:** con Comportamento Fermo tutto funziona come nella sessione 4.
-4. **Animator del manichino.** In `Dummy.controller` aggiungi quattro stati **senza transizioni**: `Guard` (clip Defense), `Block` (clip DefenseHit, Speed 2.5), `KO` (clip Die01) e `GetUp` (clip Die01Recover).
-5. **Parata** nel `TrainingDummy` (TODO 5a–5e).
-   - `IsGuarding`: sempre vero con «Para sempre». Con «Para dopo il primo colpo», vero se dall'ultimo contatto sono passati meno di `guardMemory` frame (60). Falso con «Fermo».
-   - In `ReceiveHit`, un colpo che non continua una combo, quando il manichino è in guardia, viene parato: `Block` e `HitResult.Blocked`.
-   - `Block`: niente danno, blockstun dall'attacco, knockback ridotto, clip Block dal tempo 0, evento `OnBlocked`. In `FixedUpdate` il blockstun si consuma come l'hitstun.
-   - Da fermo la posa segue la guardia: `Guard` quando para, `Idle` quando no.
-   - **Verifica:** con «Para sempre» il manichino sta in guardia e Jab → Cross viene parato due volte senza perdere vita. Con «Para dopo il primo colpo» J J J veloci vanno a segno, il Cross premuto tardi viene parato e dopo un secondo la guardia si abbassa.
-6. **KO e rialzo.**
-   - In `Health` (TODO 6a–6b): la proprietà `MinHealth`, l'evento `OnKO` e nessun danno quando la vita è già a 0.
-   - In `DamageLogger` (TODO 6c): scrive anche il KO.
-   - Nel `TrainingDummy` (TODO 6d–6g):
-     - prima del danno `MinHealth` dipende dalla vita scelta (1 con «Infinita»);
-     - a vita 0 il manichino va KO, resta a terra `koFrames` frame (90), si rialza in `getUpFrames` frame (52) e torna con la vita piena;
-     - durante KO e rialzo i colpi sono ignorati e la rigenerazione non conta.
-   - **Verifica:** con «Normale» qualche Straight → Uppercut mandano KO, i colpi durante il KO sono ignorati e dopo circa 2,4 secondi il manichino si rialza con la barra piena. Con «Infinita» la vita si ferma a 1. R durante il KO lo rimette in piedi.
-7. **ComboTracker** (TODO 7). Scrive in Console i colpi parati, per esempio «Cross parato».
-8. **Frame data nell'HUD.**
-   - In `FighterCombat` (TODO 8a), gli eventi `OnAttackStarted` e `OnWhiff`.
-   - Nel Canvas HUD crea un'Image `FrameData` in basso a sinistra (Anchor Presets in basso a sinistra con Shift, Pos X 40, Pos Y 40, Width 820, Height 100, Source Image Bianco, colore scuro semitrasparente).
-   - Dentro `FrameData` metti due Text (UI > Legacy > Text): `Dati` a sinistra (font 26) ed `Esito` a destra (font 30, grassetto), tutti e due con Rich Text attivo.
-   - Nel `TrainingHUD` collega Player, Frame Data Text e Result Text, poi completa i TODO 8b–8d.
-   - **Verifica:** il Jab mostra +5 e −1, l'Uppercut +4 e −8, e l'esito cambia a ogni colpo (A SEGNO, PARATO, IGNORATO, A VUOTO).
+2. **Hitstop.**
+   - Nella scena crea un oggetto vuoto `Feedback` con i componenti `HitStop` e `HitFeedback`. Unity aggiunge da solo un `AudioSource`: togli la spunta a Play On Awake.
+   - In `HitStop` completa i TODO 2a–2c. Nella lista Animators dell'Inspector metti due elementi: l'Animator del player e quello del manichino, che stanno sui modelli dentro `Player` e `Dummy`.
+   - In `HitFeedback` completa i TODO 2d–2e e collega Player Hitbox (l'oggetto `Player`), Hit Stop (`Feedback`) e Fight Camera (`Main Camera`).
+   - In `FighterCombat` (TODO 2f), `TrainingDummy` (TODO 2g) e `FighterInput` (TODO 2h) aggiungi il campo `hitStop` e il controllo in `FixedUpdate`. Poi trascina `Feedback` nel campo Hit Stop dei tre componenti, su `Player` e su `Dummy`.
+   - **Verifica:** con un Jab player e manichino si fermano un attimo all'impatto. J J J fanno ancora Jab → Cross → Hook e in Console compare «Combo 3 colpi – 22 danni». Con «Para sempre» si ferma anche il colpo parato.
+3. **Tremolio della camera.**
+   - In `FightCamera` completa i TODO 3a–3c. Se lavori sul tuo progetto, aggiungi prima, sotto un `[Header("Tremolio")]`, il campo `[SerializeField] float shakeDuration = 0.2f` e il metodo vuoto `public void Shake(float strength)`.
+   - In `HitFeedback` (TODO 3d) fai partire il tremolio.
+   - **Verifica:** a ogni colpo la camera trema, meno quando il colpo è parato. Il tremolio continua anche mentre i combattenti sono fermi, poi la camera torna a seguirli come prima, senza scivolare.
+4. **Effetti d'impatto.**
+   - In `Hitbox` (TODO 4a) la proprietà `Center`, il punto d'impatto.
+   - In `HitFeedback` (TODO 4b) crea l'effetto. Nell'Inspector metti `FX_Colpo` in Hit Effect e `FX_Parata` in Block Effect.
+   - **Verifica:** a ogni colpo compaiono le scintille sul pugno, in parata l'effetto azzurro. Nella Hierarchy le copie degli effetti spariscono dopo un secondo. Con il manichino KO (vita «Normale») i colpi non hanno effetti.
+5. **Suoni.**
+   - In `HitFeedback` (TODO 5) suona la clip giusta. Nell'Inspector metti `Parata` in Block Sound; i suoni dei colpi li hai già messi negli asset al passo 1.
+   - **Verifica:** Jab e Cross hanno un suono secco, Hook, Straight e Uppercut un tonfo, la parata un "toc". Se non senti niente, controlla che nella barra della Game view non sia attivo Mute Audio.
+6. **Contatore combo e PARATO.**
+   - In `ComboTracker` (TODO 6a) l'evento `OnComboChanged`.
+   - Nel Canvas `HUD` crea due oggetti vuoti (tasto destro su `HUD` > Create Empty) con il componente `CanvasGroup`, tutti e due con Anchor Presets in alto a destra con Shift:
+     - `Combo`: Pos X −60, Pos Y −130, Width 640, Height 120;
+     - `Parato`: Pos X −60, Pos Y −260, Width 640, Height 70.
+   - Dentro ognuno metti un Text (UI > Legacy > Text) che lo riempie tutto (Anchor Presets con Alt, l'ultimo in basso a destra), grassetto, allineato in alto a destra, con Rich Text attivo e Horizontal e Vertical Overflow su Overflow. In `Combo` font 56 e colore giallo; in `Parato` font 48, colore azzurro e testo «PARATO». Un componente `Shadow` li rende più leggibili.
+   - Nel `TrainingHUD` completa i TODO 6b–6e. Se lavori sul tuo progetto, aggiungi prima i campi copiandoli da `TrainingHUD.cs` di questo branch: le intestazioni Contatore combo, Scritta PARATO e Dissolvenza e i campi privati `comboRunning`, `comboTimer` e `blockedTimer`.
+   - Nell'Inspector del `TrainingHUD` collega Combo Tracker (`Dummy`), Combo Group (`Combo`), Combo Text (il Text dentro `Combo`) e Blocked Group (`Parato`).
+   - **Verifica:** all'avvio contatore e PARATO non si vedono. Con J J J compaiono «2 COLPI» e poi «3 COLPI» con sotto «22 danni», che restano un secondo dopo la fine della combo e poi svaniscono in mezzo secondo. Con «Para sempre» ogni colpo parato fa comparire PARATO.
+7. **Input display (facoltativo).**
+   - In `FighterInput` (TODO 7a) l'evento `OnAttackPressed`.
+   - Nel Canvas `HUD` crea un'Image `InputDisplay` (Anchor Presets in basso a sinistra con Shift, Pos X 40, Pos Y 160, Width 160, Height 330, Source Image Bianco, colore scuro semitrasparente) e dentro un Text che la riempie, font 26, grassetto, allineato in alto a sinistra, con Rich Text attivo.
+   - Aggiungi all'Image il componente `InputDisplay`, completa i TODO 7b–7d e collega Input e Movement (`Player`), Hit Stop (`Feedback`) e Text.
+   - **Verifica:** camminando e tirando pugni compaiono le righe (→ avanti, ← indietro, · fermo, L leggero, H pesante), la più recente in alto, con in grigio i frame passati dal comando precedente. Con J J veloci leggi quanti frame passano tra le due pressioni.
 
 ## Sfide
 
-- **Casuale:** una quarta opzione di comportamento che para un colpo su due.
-- **Stordito:** dopo una combo da 5 colpi il manichino resta stordito con la clip Dizzy e intanto non para.
-- **Vantaggio misurato:** conta in gioco i frame tra quando torni libero tu e quando torna libero il manichino, e confrontali con il vantaggio calcolato.
+- **Peso proporzionale:** tremolio e hitstop che crescono con il danno del colpo invece di valori fissi.
+- **Colpo a vuoto:** un suono quando un attacco non tocca niente, con l'evento `OnWhiff` della sessione 5 (per esempio `Pugno_Leggero` con il `pitch` più alto).
+- **KO spettacolare:** il colpo che manda KO il manichino ha un hitstop lungo (per esempio 20 frame) e un tremolio forte.
+- **Pool di effetti:** riusa pochi effetti già creati invece di crearne e distruggerne uno a ogni colpo.
 
 ## Fine sessione
 

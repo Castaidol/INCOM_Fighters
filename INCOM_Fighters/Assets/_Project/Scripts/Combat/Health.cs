@@ -2,7 +2,7 @@ using UnityEngine;
 
 /// <summary>
 /// Vita del personaggio. Chi vuole sapere cosa succede si iscrive agli eventi (pattern Observer):
-/// DamageLogger ascolta OnDamaged, la barra vita ascolta OnChanged.
+/// DamageLogger ascolta OnDamaged e OnKO, la barra vita ascolta OnChanged.
 /// </summary>
 public class Health : MonoBehaviour
 {
@@ -11,8 +11,8 @@ public class Health : MonoBehaviour
     public int Max => max;
     public int Current { get; private set; }
 
-    // TODO 6a (sessione 5): public int MinHealth { get; set; }: sotto questo valore la vita non scende
-    //   (con 1 non si va mai KO: la vita "Infinita").
+    /// <summary>Sotto questo valore la vita non scende: con 1 non si va mai KO (vita "Infinita").</summary>
+    public int MinHealth { get; set; }
 
     /// <summary>Danno ricevuto e vita rimasta.</summary>
     public event System.Action<int, int> OnDamaged;
@@ -20,7 +20,8 @@ public class Health : MonoBehaviour
     /// <summary>Vita attuale e vita massima, a ogni cambiamento (danno, rigenerazione, reset).</summary>
     public event System.Action<int, int> OnChanged;
 
-    // TODO 6b: un evento pubblico OnKO di tipo System.Action, lanciato quando la vita arriva a 0.
+    /// <summary>La vita è arrivata a 0.</summary>
+    public event System.Action OnKO;
 
     void Awake()
     {
@@ -29,12 +30,11 @@ public class Health : MonoBehaviour
 
     public void TakeDamage(int amount)
     {
-        // TODO 6b: esci anche se la vita è già a 0; scendi fino a MinHealth invece che fino a 0;
-        //   dopo OnChanged, se Current è 0, lancia OnKO.
-        if (amount <= 0) return;
-        Current = Mathf.Max(0, Current - amount);
+        if (amount <= 0 || Current == 0) return;
+        Current = Mathf.Max(MinHealth, Current - amount);
         OnDamaged?.Invoke(amount, Current);
         OnChanged?.Invoke(Current, max);
+        if (Current == 0) OnKO?.Invoke();
     }
 
     /// <summary>Riporta la vita al massimo.</summary>

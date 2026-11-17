@@ -16,8 +16,11 @@ public class Hitbox : MonoBehaviour
     Vector3 center;
     bool isActive;
 
-    // TODO 3d (sessione 5): un evento pubblico OnContact di tipo System.Action<AttackData, HitResult>:
-    //   un colpo ha toccato una hurtbox, con il risultato deciso da chi l'ha ricevuto.
+    /// <summary>Un colpo ha toccato una hurtbox, con il risultato deciso da chi l'ha ricevuto.</summary>
+    public event System.Action<AttackData, HitResult> OnContact;
+
+    // TODO 4a (sessione 6): una proprietà pubblica Vector3 Center che restituisce center:
+    //   il centro della hitbox nell'ultimo frame dell'attacco, cioè il punto d'impatto.
 
     /// <summary>True se l'attacco in corso ha già toccato almeno una hurtbox (anche se il colpo è stato parato):
     /// serve per continuare la combo.</summary>
@@ -50,8 +53,8 @@ public class Hitbox : MonoBehaviour
             if (!hit.TryGetComponent(out Hurtbox hurtbox)) continue;
             if (hurtbox.transform.root == transform.root) continue; // non ci si colpisce da soli
             if (!alreadyHit.Add(hurtbox)) continue;                 // già colpita da questo attacco
-            hurtbox.ReceiveHit(attack, transform);
-            // TODO 3d: salva in una variabile HitResult quello che restituisce ReceiveHit e lancia OnContact(attack, risultato).
+            HitResult result = hurtbox.ReceiveHit(attack, transform);
+            OnContact?.Invoke(attack, result);
         }
     }
 

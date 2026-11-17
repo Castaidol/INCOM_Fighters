@@ -1,8 +1,8 @@
 using UnityEngine;
 
 /// <summary>
-/// Scrive in Console ogni danno ricevuto. È il primo "osservatore" di Health:
-/// nella sessione 3 lo affianca la barra vita, che ascolta lo stesso evento.
+/// Scrive in Console ogni danno ricevuto e il KO. È il primo "osservatore" di Health:
+/// la barra vita ascolta un altro evento della stessa Health.
 /// </summary>
 [RequireComponent(typeof(Health))]
 public class DamageLogger : MonoBehaviour
@@ -17,17 +17,22 @@ public class DamageLogger : MonoBehaviour
     void OnEnable()
     {
         health.OnDamaged += LogDamage;
-        // TODO 6c (sessione 5): iscriviti anche a health.OnKO con un metodo che scrive "<nome>: KO" in Console
-        //   (e togli l'iscrizione in OnDisable).
+        health.OnKO += LogKO;
     }
 
     void OnDisable()
     {
         health.OnDamaged -= LogDamage;
+        health.OnKO -= LogKO;
     }
 
     void LogDamage(int damage, int current)
     {
         Debug.Log($"{name}: -{damage} (vita {current}/{health.Max})");
+    }
+
+    void LogKO()
+    {
+        Debug.Log($"{name}: KO");
     }
 }

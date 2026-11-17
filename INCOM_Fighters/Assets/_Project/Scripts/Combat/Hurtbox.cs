@@ -15,15 +15,15 @@ public class Hurtbox : MonoBehaviour
     void Awake()
     {
         if (health == null) health = GetComponentInParent<Health>();
-        // TODO 3b (sessione 5): cerca tra i genitori chi decide com'è andato il colpo e salvalo in receiver.
-        //   GetComponentInParent<IHitReceiver>() funziona anche con le interfacce.
+        // GetComponentInParent funziona anche con le interfacce.
+        receiver = GetComponentInParent<IHitReceiver>();
     }
 
     /// <summary>Chiamato dalla Hitbox. Restituisce com'è andato il colpo.</summary>
     public HitResult ReceiveHit(AttackData attack, Transform attacker)
     {
-        // TODO 3c: se receiver non è null decide lui: restituisci receiver.ReceiveHit(attack, attacker).
-        //   Altrimenti il colpo va sempre a segno, come prima (le due righe qui sotto).
+        if (receiver != null) return receiver.ReceiveHit(attack, attacker);
+
         health.TakeDamage(attack.damage);
         return HitResult.Hit;
     }

@@ -20,6 +20,8 @@ public class TrainingDummy : MonoBehaviour, IHitReceiver
     [SerializeField] ArenaBounds arena;
     [Tooltip("Opzioni dell'allenamento. Se manca, il manichino non para e non va mai KO.")]
     [SerializeField] TrainingSettings settings;
+    // TODO 2g (sessione 6): un campo [SerializeField] HitStop hitStop, con il Tooltip
+    //   "Durante l'hitstop il manichino non conta i suoi frame."
 
     [Header("Animazione")]
     [SerializeField] string idleState = "Idle";
@@ -64,7 +66,8 @@ public class TrainingDummy : MonoBehaviour, IHitReceiver
     /// <summary>Colpo a segno. Il bool è true se il manichino era ancora in hitstun: il colpo continua una combo.</summary>
     public event System.Action<AttackData, bool> OnHitTaken;
 
-    // TODO 5c (sessione 5): un evento pubblico OnBlocked di tipo System.Action<AttackData>, lanciato quando il manichino para.
+    /// <summary>Colpo parato.</summary>
+    public event System.Action<AttackData> OnBlocked;
 
     /// <summary>Il manichino non è più in hitstun (è tornato in guardia o è andato KO): la combo, se c'era, è finita.</summary>
     public event System.Action OnRecovered;
@@ -80,15 +83,12 @@ public class TrainingDummy : MonoBehaviour, IHitReceiver
     int CounterCap => Mathf.Max(regenDelay, guardMemory);
 
     /// <summary>True se in questo momento il manichino para i colpi che arrivano fuori dall'hitstun.</summary>
-    public bool IsGuarding
+    public bool IsGuarding => Behavior switch
     {
-        get
-        {
-            // TODO 5a: con Behavior AlwaysBlock è sempre true; con BlockAfterFirstHit è true se framesSinceContact
-            //   è minore di guardMemory (c'è stato un contatto da poco); con Stand è false.
-            return false;
-        }
-    }
+        DummyBehavior.AlwaysBlock => true,
+        DummyBehavior.BlockAfterFirstHit => framesSinceContact < guardMemory,
+        _ => false,
+    };
 
     void Awake()
     {
@@ -96,7 +96,6 @@ public class TrainingDummy : MonoBehaviour, IHitReceiver
         pushbox = GetComponent<Pushbox>();
         if (animator == null) animator = GetComponentInChildren<Animator>();
         animator.applyRootMotion = false;
-        // Il contatore parte dal massimo: niente guardia alzata e niente rigenerazione all'avvio.
         framesSinceContact = CounterCap;
         pose = idleState;
     }
@@ -104,15 +103,19 @@ public class TrainingDummy : MonoBehaviour, IHitReceiver
     /// <summary>Chiamato dalla Hurtbox: il manichino decide com'è andato il colpo.</summary>
     public HitResult ReceiveHit(AttackData attack, Transform attacker)
     {
-        // TODO 6g: a terra e mentre si rialza (stati KO e GetUp) i colpi non contano: restituisci HitResult.Ignored.
+        // A terra e mentre si rialza i colpi non contano.
+        if (State == DummyState.KO || State == DummyState.GetUp) return HitResult.Ignored;
 
-        // Lo stato si guarda PRIMA di aggiornarlo: se era ancora in Hit, il colpo continua la combo.
+        // Lo stato si guarda PRIMA di aggiornarlo: in hitstun non si para, e il colpo continua la combo.
         bool comboHit = State == DummyState.Hit;
-
-        // TODO 5b: in hitstun non si para. Calcola qui bool blocks = !comboHit && IsGuarding,
-        //   prima che la riga qui sotto azzeri il contatore che IsGuarding usa.
+        bool blocks = !comboHit && IsGuarding;
         framesSinceContact = 0;
-        // TODO 5b: se blocks è vero chiama Block(attack, attacker) e restituisci HitResult.Blocked.
+
+        if (blocks)
+        {
+            Block(attack, attacker);
+            return HitResult.Blocked;
+        }
 
         TakeHit(attack, attacker, comboHit);
         return HitResult.Hit;
@@ -120,11 +123,17 @@ public class TrainingDummy : MonoBehaviour, IHitReceiver
 
     void TakeHit(AttackData attack, Transform attacker, bool comboHit)
     {
-        // TODO 6d: prima del danno health.MinHealth = CanBeKnockedOut ? 0 : 1 (con la vita "Infinita" non si scende sotto 1).
+        // Con la vita "Infinita" non si scende sotto 1.
+        health.MinHealth = CanBeKnockedOut ? 0 : 1;
         health.TakeDamage(attack.damage);
         StartKnockback(attack.knockback, attacker);
 
-        // TODO 6d: se health.Current è 0 il colpo manda KO: OnHitTaken?.Invoke(attack, comboHit), KnockOut() e return.
+        if (health.Current == 0)
+        {
+            OnHitTaken?.Invoke(attack, comboHit);
+            KnockOut();
+            return;
+        }
 
         // Un nuovo colpo fa ripartire la reazione: hitstun da capo e animazione dal tempo 0.
         State = DummyState.Hit;
@@ -135,15 +144,22 @@ public class TrainingDummy : MonoBehaviour, IHitReceiver
 
     void Block(AttackData attack, Transform attacker)
     {
-        // TODO 5c: parata, nessun danno. State = DummyState.Block, blockstunLeft = blockstun dell'attacco,
-        //   StartKnockback(attack.knockback * blockKnockback, attacker), animator.Play(blockState, 0, 0f)
-        //   e lancia OnBlocked.
+        // Parata: nessun danno, blockstun al posto dell'hitstun e knockback ridotto.
+        State = DummyState.Block;
+        blockstunLeft = attack.blockstun;
+        StartKnockback(attack.knockback * blockKnockback, attacker);
+        animator.Play(blockState, 0, 0f);
+        OnBlocked?.Invoke(attack);
     }
 
     void KnockOut()
     {
-        // TODO 6e: State = DummyState.KO, stateFrame = 0, hitstunLeft e blockstunLeft a 0,
-        //   animator.CrossFadeInFixedTime(koState, 0.05f) e OnRecovered?.Invoke() (la combo finisce con il KO).
+        State = DummyState.KO;
+        stateFrame = 0;
+        hitstunLeft = 0;
+        blockstunLeft = 0;
+        animator.CrossFadeInFixedTime(koState, 0.05f);
+        OnRecovered?.Invoke(); // la combo finisce con il KO
     }
 
     void StartKnockback(float distance, Transform attacker)
@@ -157,6 +173,9 @@ public class TrainingDummy : MonoBehaviour, IHitReceiver
 
     void FixedUpdate()
     {
+        // TODO 2g: hitstop. Se hitStop non è null e IsFrozen è vero esci subito:
+        //   stun, knockback, KO e rigenerazione restano fermi.
+
         if (knockbackLeft > 0) ApplyKnockback();
 
         switch (State)
@@ -172,17 +191,27 @@ public class TrainingDummy : MonoBehaviour, IHitReceiver
                 break;
 
             case DummyState.Block:
-                // TODO 5d: come per Hit, ma con blockstunLeft e senza OnRecovered (una parata non chiude nessuna combo).
+                if (blockstunLeft > 0) blockstunLeft--;
+                else ReturnToStance();
                 break;
 
             case DummyState.KO:
-                // TODO 6f: aumenta stateFrame; quando arriva a koFrames passa a GetUp:
-                //   State = DummyState.GetUp, stateFrame = 0, animator.CrossFadeInFixedTime(getUpState, crossFade).
+                if (++stateFrame >= koFrames)
+                {
+                    State = DummyState.GetUp;
+                    stateFrame = 0;
+                    animator.CrossFadeInFixedTime(getUpState, crossFade);
+                }
                 break;
 
             case DummyState.GetUp:
-                // TODO 6f: aumenta stateFrame; quando arriva a getUpFrames il manichino è in piedi:
-                //   health.RestoreFull(), framesSinceContact = CounterCap e ReturnToStance().
+                if (++stateFrame >= getUpFrames)
+                {
+                    // In piedi: vita piena e guardia abbassata.
+                    health.RestoreFull();
+                    framesSinceContact = CounterCap;
+                    ReturnToStance();
+                }
                 break;
 
             case DummyState.Idle:
@@ -190,7 +219,8 @@ public class TrainingDummy : MonoBehaviour, IHitReceiver
                 break;
         }
 
-        // TODO 6g: a terra (KO e GetUp) non si conta: esci qui. Al rialzo la vita torna comunque piena.
+        // A terra non si conta: al rialzo la vita torna comunque piena.
+        if (State == DummyState.KO || State == DummyState.GetUp) return;
 
         // Frame senza contatti: rigenerazione e memoria della guardia ("Para dopo il primo colpo").
         if (framesSinceContact < CounterCap)
@@ -203,16 +233,18 @@ public class TrainingDummy : MonoBehaviour, IHitReceiver
     void ReturnToStance()
     {
         State = DummyState.Idle;
-        // TODO 5e: la posa da fermo segue la guardia: guardState se IsGuarding, altrimenti idleState.
-        pose = idleState;
+        pose = IsGuarding ? guardState : idleState;
         animator.CrossFadeInFixedTime(pose, crossFade);
     }
 
     void UpdatePose()
     {
-        // TODO 5e: da fermo la posa segue la guardia anche quando cambia (con "Para dopo il primo colpo" la guardia
-        //   si abbassa dopo guardMemory frame). Calcola la posa voluta come in ReturnToStance; se è diversa da pose,
-        //   salvala in pose e fai animator.CrossFadeInFixedTime(pose, crossFade).
+        // Da fermo la posa segue la guardia: Defense quando para, Idle01 quando no.
+        // Con "Para dopo il primo colpo" la guardia si abbassa dopo guardMemory frame senza contatti.
+        string wanted = IsGuarding ? guardState : idleState;
+        if (wanted == pose) return;
+        pose = wanted;
+        animator.CrossFadeInFixedTime(pose, crossFade);
     }
 
     void ApplyKnockback()
