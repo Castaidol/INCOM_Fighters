@@ -36,6 +36,12 @@ public class FighterCombat : MonoBehaviour
     /// <summary>Attacco in corso (null se non sta attaccando).</summary>
     public AttackData CurrentAttack => current;
 
+    /// <summary>Attacco di partenza del pugno leggero: la radice di un albero delle combo.</summary>
+    public AttackData LightAttack => lightAttack;
+
+    /// <summary>Attacco di partenza del pugno pesante.</summary>
+    public AttackData HeavyAttack => heavyAttack;
+
     /// <summary>Frame dell'attacco in corso, da 1 a TotalFrames.</summary>
     public int CurrentFrame => frame;
 

@@ -22,6 +22,12 @@ public class Hitbox : MonoBehaviour
     /// <summary>Centro della hitbox nell'ultimo frame dell'attacco: il punto d'impatto.</summary>
     public Vector3 Center => center;
 
+    /// <summary>True nei frame attivi dell'attacco in corso.</summary>
+    public bool IsActive => isActive;
+
+    /// <summary>Dimensioni della hitbox dell'attacco in corso (zero se non sta attaccando).</summary>
+    public Vector3 Size => attack != null ? attack.hitboxSize : Vector3.zero;
+
     /// <summary>True se l'attacco in corso ha già toccato almeno una hurtbox (anche se il colpo è stato parato):
     /// serve per continuare la combo.</summary>
     public bool HasHit => alreadyHit.Count > 0;

@@ -17,7 +17,7 @@ public enum DummyHealthMode
 
 /// <summary>
 /// Le opzioni dell'allenamento. Si cambiano dall'Inspector anche durante il Play:
-/// il manichino le rilegge a ogni colpo. Nella sessione 7 le scriverà il menu.
+/// il manichino le rilegge a ogni colpo. Le cambia anche il menu di pausa (TrainingMenu).
 /// </summary>
 public class TrainingSettings : MonoBehaviour
 {
@@ -28,6 +28,10 @@ public class TrainingSettings : MonoBehaviour
     [Tooltip("Infinita: la vita non scende sotto 1. Normale: a 0 il manichino va KO e si rialza con la vita piena.")]
     [SerializeField] DummyHealthMode healthMode = DummyHealthMode.Infinite;
 
+    [Tooltip("Mostra hitbox e hurtbox come cubi colorati, anche nella build.")]
+    [SerializeField] bool showHitboxes;
+
     public DummyBehavior Behavior { get => behavior; set => behavior = value; }
     public DummyHealthMode HealthMode { get => healthMode; set => healthMode = value; }
+    public bool ShowHitboxes { get => showHitboxes; set => showHitboxes = value; }
 }

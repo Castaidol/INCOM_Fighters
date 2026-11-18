@@ -11,12 +11,17 @@ public class Hurtbox : MonoBehaviour
     [SerializeField] Health health;
 
     IHitReceiver receiver;
+    Collider shape;
+
+    /// <summary>Il volume che può essere colpito, nel mondo (serve per disegnarlo).</summary>
+    public Bounds Bounds => shape.bounds;
 
     void Awake()
     {
         if (health == null) health = GetComponentInParent<Health>();
         // GetComponentInParent funziona anche con le interfacce.
         receiver = GetComponentInParent<IHitReceiver>();
+        shape = GetComponent<Collider>();
     }
 
     /// <summary>Chiamato dalla Hitbox. Restituisce com'è andato il colpo.</summary>

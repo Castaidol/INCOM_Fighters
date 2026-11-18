@@ -8,6 +8,7 @@ public enum AttackButton { None, Light, Heavy }
 /// Unico script del gioco che conosce l'Input System.
 /// Legge la action map "Fighter" dal PlayerInput e la traduce in comandi semplici:
 /// gli altri componenti li usano senza sapere se arrivano da joypad, tastiera o (in futuro) da un'IA.
+/// Con il menu di pausa aperto il PlayerInput passa alla mappa "UI", che muove i pulsanti tramite l'EventSystem.
 /// </summary>
 // Il buffer invecchia prima che FighterCombat lo legga: ogni pugno resta valido esattamente bufferFrames frame.
 [DefaultExecutionOrder(-20)]
@@ -27,14 +28,20 @@ public class FighterInput : MonoBehaviour
     InputAction lightAction;
     InputAction heavyAction;
     InputAction resetAction;
+    InputAction pauseAction;  // mappa Fighter: Start o Esc apre il menu
+    InputAction cancelAction; // mappa UI: B, Start o Esc chiude il menu
+
+    PlayerInput playerInput;
+    bool menuMode;
 
     // Input buffer: un solo posto. L'ultimo pugno premuto sostituisce il precedente
     // e resta valido per bufferFrames frame, finché FighterCombat non lo usa.
     AttackButton buffered;
     int bufferAge;
 
-    // Il reset non ha bisogno di buffer: resta in attesa finché qualcuno non lo consuma.
+    // Reset e pausa non hanno bisogno di buffer: restano in attesa finché qualcuno non li consuma.
     bool resetQueued;
+    bool pauseQueued;
 
     /// <summary>Direzione orizzontale nel mondo: -1 sinistra, 0 fermo, +1 destra.</summary>
     public float Horizontal { get; private set; }
@@ -48,11 +55,20 @@ public class FighterInput : MonoBehaviour
     void Awake()
     {
         // PlayerInput crea una copia dell'asset per ogni giocatore: si leggono le azioni da lì.
-        InputActionAsset actions = GetComponent<PlayerInput>().actions;
+        playerInput = GetComponent<PlayerInput>();
+        InputActionAsset actions = playerInput.actions;
         moveAction = actions.FindAction("Move", throwIfNotFound: true);
         lightAction = actions.FindAction("LightPunch", throwIfNotFound: true);
         heavyAction = actions.FindAction("HeavyPunch", throwIfNotFound: true);
         resetAction = actions.FindAction("Reset", throwIfNotFound: true);
+        pauseAction = actions.FindAction("Fighter/Pause", throwIfNotFound: true);
+        cancelAction = actions.FindAction("UI/Cancel", throwIfNotFound: true);
+    }
+
+    void Start()
+    {
+        // L'InputSystemUIInputModule accende da solo la mappa UI: in gioco resta spenta finché non si apre il menu.
+        cancelAction.actionMap.Disable();
     }
 
     void Update()
@@ -66,6 +82,10 @@ public class FighterInput : MonoBehaviour
         if (lightAction.WasPressedThisFrame()) Buffer(AttackButton.Light);
         if (heavyAction.WasPressedThisFrame()) Buffer(AttackButton.Heavy);
         if (resetAction.WasPressedThisFrame()) resetQueued = true;
+
+        // Lo stesso segnale apre e chiude il menu: Pause in gioco, Cancel nel menu.
+        InputAction toggle = menuMode ? cancelAction : pauseAction;
+        if (toggle.WasPressedThisFrame()) pauseQueued = true;
     }
 
     void FixedUpdate()
@@ -96,5 +116,27 @@ public class FighterInput : MonoBehaviour
         bool pressed = resetQueued;
         resetQueued = false;
         return pressed;
+    }
+
+    /// <summary>True una sola volta per ogni pressione di Pausa (Start o Esc; con il menu aperto anche B).</summary>
+    public bool ConsumePause()
+    {
+        bool pressed = pauseQueued;
+        pauseQueued = false;
+        return pressed;
+    }
+
+    /// <summary>
+    /// Menu aperto o chiuso. Con il menu aperto il PlayerInput passa alla mappa "UI": i pugni non arrivano
+    /// al combattente e il joypad muove la selezione tra i pulsanti.
+    /// </summary>
+    public void SetMenuMode(bool open)
+    {
+        menuMode = open;
+        playerInput.SwitchCurrentActionMap(open ? "UI" : "Fighter");
+        // Un pugno o un reset premuti prima della pausa non devono partire alla ripresa.
+        ConsumeBuffer();
+        resetQueued = false;
+        Horizontal = 0f;
     }
 }

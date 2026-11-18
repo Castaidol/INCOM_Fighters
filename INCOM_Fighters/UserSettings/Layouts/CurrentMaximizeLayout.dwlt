@@ -25,7 +25,7 @@ MonoBehaviour:
   m_MinSize: {x: 400, y: 112}
   m_MaxSize: {x: 32384, y: 16192}
   vertical: 0
-  controlID: 230
+  controlID: 560
   draggingID: 0
 --- !u!114 &2
 MonoBehaviour:
@@ -72,7 +72,7 @@ MonoBehaviour:
   m_SerializedViewValues:
   - C:\Users\gabri\Desktop\INCOM_Fighters\INCOM_Fighters\Library\PlayModeViewStates\9cb10fa49d2146e4290abec388661f70
   m_PlayModeViewName: GameView
-  m_ShowGizmos: 1
+  m_ShowGizmos: 0
   m_TargetDisplay: 0
   m_ClearColor: {r: 0, g: 0, b: 0, a: 0}
   m_TargetSize: {x: 1920, y: 1080}
@@ -82,7 +82,7 @@ MonoBehaviour:
   m_EnterPlayModeBehavior: 1
   m_UseMipMap: 0
   m_VSyncEnabled: 0
-  m_Gizmos: 1
+  m_Gizmos: 0
   m_Stats: 0
   m_SelectedSizes: 03000000000000000000000000000000000000000000000000000000000000000000000000000000
   m_ZoomArea:
@@ -238,7 +238,7 @@ MonoBehaviour:
   m_MinSize: {x: 200, y: 112}
   m_MaxSize: {x: 16192, y: 16192}
   vertical: 1
-  controlID: 231
+  controlID: 561
   draggingID: 0
 --- !u!114 &6
 MonoBehaviour:
@@ -264,7 +264,7 @@ MonoBehaviour:
   m_MinSize: {x: 200, y: 56}
   m_MaxSize: {x: 16192, y: 8096}
   vertical: 0
-  controlID: 226
+  controlID: 556
   draggingID: 0
 --- !u!114 &7
 MonoBehaviour:
@@ -339,8 +339,11 @@ MonoBehaviour:
       m_LastClickedID:
         m_rawData: 0
       m_ExpandedIDs:
-      - m_rawData: 568105589213753558
-      - m_rawData: 568105589213755822
+      - m_rawData: 568105589213747060
+      - m_rawData: 568105589213747428
+      - m_rawData: 568105589213748556
+      - m_rawData: 568105589213753812
+      - m_rawData: 568105589213755966
       m_RenameOverlay:
         m_UserAcceptedRename: 0
         m_Name: 
@@ -1414,10 +1417,10 @@ MonoBehaviour:
       m_rawData: 568105584918859504
     m_ExpandedIDs:
     - m_rawData: 0
-    - m_rawData: 568105584918853372
-    - m_rawData: 568105584918859276
-    - m_rawData: 568105584918859278
-    - m_rawData: 568105584918859280
+    - m_rawData: 568105584918853386
+    - m_rawData: 568105584918859368
+    - m_rawData: 568105584918859370
+    - m_rawData: 568105584918859372
     m_RenameOverlay:
       m_UserAcceptedRename: 0
       m_Name: 
@@ -1451,10 +1454,10 @@ MonoBehaviour:
       m_rawData: 0
     m_ExpandedIDs:
     - m_rawData: 0
-    - m_rawData: 568105584918853372
-    - m_rawData: 568105584918859276
-    - m_rawData: 568105584918859278
-    - m_rawData: 568105584918859280
+    - m_rawData: 568105584918853386
+    - m_rawData: 568105584918859368
+    - m_rawData: 568105584918859370
+    - m_rawData: 568105584918859372
     m_RenameOverlay:
       m_UserAcceptedRename: 0
       m_Name: 

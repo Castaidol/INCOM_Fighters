@@ -57,8 +57,9 @@ public class FightCamera : MonoBehaviour
         basePosition = Vector3.SmoothDamp(basePosition, target, ref velocity, smoothTime);
 
         // Il tremolio gira in tempo reale: continua anche durante l'hitstop, che ferma solo i combattenti.
+        // In pausa invece deltaTime è 0: niente tremolio, altrimenti la camera vibrerebbe dietro al menu.
         Vector3 offset = Vector3.zero;
-        if (shakeTimeLeft > 0f)
+        if (shakeTimeLeft > 0f && Time.deltaTime > 0f)
         {
             shakeTimeLeft -= Time.deltaTime;
             float fade = Mathf.Clamp01(shakeTimeLeft / shakeDuration);

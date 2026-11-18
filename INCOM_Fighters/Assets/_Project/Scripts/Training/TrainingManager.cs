@@ -2,7 +2,7 @@ using UnityEngine;
 
 /// <summary>
 /// Regole della modalità allenamento. Per ora il reset: View/Select (o R) rimette player e manichino
-/// dove erano all'inizio, con la vita piena. Nella sessione 7 lo stesso metodo lo chiamerà il menu.
+/// dove erano all'inizio, con la vita piena. Lo stesso metodo lo chiama il pulsante Ricomincia del menu di pausa.
 /// </summary>
 public class TrainingManager : MonoBehaviour
 {
