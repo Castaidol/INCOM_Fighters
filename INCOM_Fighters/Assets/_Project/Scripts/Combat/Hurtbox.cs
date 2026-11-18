@@ -12,6 +12,9 @@ public class Hurtbox : MonoBehaviour
 
     IHitReceiver receiver;
 
+    // TODO 6b (sessione 7): un campo Collider shape, preso in Awake con GetComponent<Collider>(), e una proprietà
+    //   pubblica Bounds Bounds che restituisce shape.bounds: il volume che può essere colpito, nel mondo.
+
     void Awake()
     {
         if (health == null) health = GetComponentInParent<Health>();

@@ -21,8 +21,8 @@ public class FighterCombat : MonoBehaviour
     [Tooltip("Secondi di dissolvenza tra le animazioni.")]
     [SerializeField] float crossFade = 0.05f;
 
-    // TODO 2f (sessione 6): un campo [SerializeField] HitStop hitStop, con il Tooltip
-    //   "Durante l'hitstop il combattente non conta i suoi frame."
+    [Tooltip("Durante l'hitstop il combattente non conta i suoi frame.")]
+    [SerializeField] HitStop hitStop;
 
     FighterInput input;
     FighterMovement movement;
@@ -35,6 +35,9 @@ public class FighterCombat : MonoBehaviour
 
     /// <summary>Attacco in corso (null se non sta attaccando).</summary>
     public AttackData CurrentAttack => current;
+
+    // TODO 5a (sessione 7): due proprietà pubbliche in sola lettura, LightAttack e HeavyAttack, che restituiscono
+    //   lightAttack e heavyAttack: le radici dell'albero delle combo, che ComboList deve leggere.
 
     /// <summary>Frame dell'attacco in corso, da 1 a TotalFrames.</summary>
     public int CurrentFrame => frame;
@@ -55,7 +58,8 @@ public class FighterCombat : MonoBehaviour
 
     void FixedUpdate()
     {
-        // TODO 2f: hitstop. Se hitStop non è null e IsFrozen è vero esci subito: questo frame per il combattente non esiste.
+        // Hitstop: questo frame non esiste per il combattente.
+        if (hitStop != null && hitStop.IsFrozen) return;
 
         if (State == FighterState.Attack)
         {

@@ -19,8 +19,11 @@ public class Hitbox : MonoBehaviour
     /// <summary>Un colpo ha toccato una hurtbox, con il risultato deciso da chi l'ha ricevuto.</summary>
     public event System.Action<AttackData, HitResult> OnContact;
 
-    // TODO 4a (sessione 6): una proprietà pubblica Vector3 Center che restituisce center:
-    //   il centro della hitbox nell'ultimo frame dell'attacco, cioè il punto d'impatto.
+    /// <summary>Centro della hitbox nell'ultimo frame dell'attacco: il punto d'impatto.</summary>
+    public Vector3 Center => center;
+
+    // TODO 6a (sessione 7): due proprietà pubbliche per disegnare la hitbox: bool IsActive, vera nei frame attivi
+    //   (isActive), e Vector3 Size, la misura della hitbox dell'attacco in corso (attack.hitboxSize), zero se attack è null.
 
     /// <summary>True se l'attacco in corso ha già toccato almeno una hurtbox (anche se il colpo è stato parato):
     /// serve per continuare la combo.</summary>

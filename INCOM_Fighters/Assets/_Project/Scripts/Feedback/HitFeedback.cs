@@ -3,7 +3,6 @@ using UnityEngine;
 /// <summary>
 /// Il "peso" dei colpi: a ogni contatto del player (a segno o parato) hitstop, tremolio della camera,
 /// effetto nel punto d'impatto e suono. Ascolta solo Hitbox.OnContact: il combattimento non sa che esiste.
-/// Si completa un pezzo alla volta, dal passo 2 al passo 5.
 /// </summary>
 [RequireComponent(typeof(AudioSource))]
 public class HitFeedback : MonoBehaviour
@@ -37,12 +36,12 @@ public class HitFeedback : MonoBehaviour
 
     void OnEnable()
     {
-        // TODO 2d (sessione 6): iscriviti a playerHitbox.OnContact con il metodo Play.
+        playerHitbox.OnContact += Play;
     }
 
     void OnDisable()
     {
-        // TODO 2d: togli l'iscrizione.
+        playerHitbox.OnContact -= Play;
     }
 
     void Play(AttackData attack, HitResult result)
@@ -51,15 +50,18 @@ public class HitFeedback : MonoBehaviour
         if (result == HitResult.Ignored) return;
         bool blocked = result == HitResult.Blocked;
 
-        // TODO 2e: hitstop. I due combattenti si fermano per i frame scritti nell'attacco: hitStop.Freeze(attack.hitstop).
+        // 1. Hitstop: i due combattenti si fermano per i frame scritti nell'attacco.
+        hitStop.Freeze(attack.hitstop);
 
-        // TODO 3d: la camera trema di blockShake se il colpo è parato, di hitShake se è a segno.
+        // 2. La camera trema (in tempo reale: continua durante l'hitstop).
+        fightCamera.Shake(blocked ? blockShake : hitShake);
 
-        // TODO 4b: crea nel punto d'impatto (playerHitbox.Center) blockEffect se il colpo è parato, hitEffect se è a segno:
-        //   Instantiate(effetto, posizione, Quaternion.identity). Se l'effetto è null non fare niente.
-        //   Distruggi la copia creata dopo effectLifetime secondi: Destroy(copia, effectLifetime).
+        // 3. Effetto nel punto d'impatto, il centro della hitbox.
+        GameObject effect = blocked ? blockEffect : hitEffect;
+        if (effect != null) Destroy(Instantiate(effect, playerHitbox.Center, Quaternion.identity), effectLifetime);
 
-        // TODO 5: con audioSource.PlayOneShot suona blockSound se il colpo è parato, attack.hitSound se è a segno.
-        //   Se la clip è null non fare niente.
+        // 4. Suono: quello dell'attacco a segno, quello della parata se parato.
+        AudioClip clip = blocked ? blockSound : attack.hitSound;
+        if (clip != null) audioSource.PlayOneShot(clip);
     }
 }

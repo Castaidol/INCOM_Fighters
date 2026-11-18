@@ -28,6 +28,10 @@ public class TrainingSettings : MonoBehaviour
     [Tooltip("Infinita: la vita non scende sotto 1. Normale: a 0 il manichino va KO e si rialza con la vita piena.")]
     [SerializeField] DummyHealthMode healthMode = DummyHealthMode.Infinite;
 
+    // TODO 4a (sessione 7): un'opzione nuova [SerializeField] bool showHitboxes, con il Tooltip
+    //   "Mostra hitbox e hurtbox come cubi colorati, anche nella build.", e la proprietà pubblica ShowHitboxes
+    //   con get e set, come le altre due qui sotto.
+
     public DummyBehavior Behavior { get => behavior; set => behavior = value; }
     public DummyHealthMode HealthMode { get => healthMode; set => healthMode = value; }
 }

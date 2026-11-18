@@ -21,12 +21,12 @@ public class InputDisplay : MonoBehaviour
 
     void OnEnable()
     {
-        // TODO 7b (sessione 6): iscriviti a input.OnAttackPressed con il metodo AddAttack.
+        input.OnAttackPressed += AddAttack;
     }
 
     void OnDisable()
     {
-        // TODO 7b: togli l'iscrizione.
+        input.OnAttackPressed -= AddAttack;
     }
 
     void Start()
@@ -36,23 +36,27 @@ public class InputDisplay : MonoBehaviour
 
     void FixedUpdate()
     {
-        // TODO 7c: durante l'hitstop esci subito; altrimenti framesSinceLast aumenta di 1.
-        //   La direzione rispetto all'avversario è input.Horizontal * movement.Facing: +1 avanti, -1 indietro, 0 fermo.
-        //   Se è diversa da lastDirection, salvala in lastDirection e aggiungi una riga con AddRow:
-        //   "→" avanti, "←" indietro, "·" fermo.
+        if (hitStop != null && hitStop.IsFrozen) return;
+        framesSinceLast++;
+
+        // La direzione si mostra rispetto all'avversario: → avanti, ← indietro, · fermo.
+        float direction = input.Horizontal * movement.Facing;
+        if (direction == lastDirection) return;
+        lastDirection = direction;
+        AddRow(direction > 0f ? "→" : direction < 0f ? "←" : "·");
     }
 
     void AddAttack(AttackButton button)
     {
-        // TODO 7b: aggiungi una riga "L" per il pugno leggero, "H" per il pesante.
+        AddRow(button == AttackButton.Light ? "L" : "H");
     }
 
     void AddRow(string command)
     {
-        // TODO 7d: inserisci la riga in cima alla lista con rows.Insert(0, ...): il comando e, in grigio, i frame
-        //   dal comando precedente ("99+" se framesSinceLast è più di 99), per esempio
-        //   $"{command}   <color=#A0A0A0>{frames}</color>".
-        //   Se le righe sono più di maxRows togli l'ultima. Poi azzera framesSinceLast e scrivi in text
-        //   tutte le righe, una sotto l'altra: string.Join("\n", rows).
+        string frames = framesSinceLast > 99 ? "99+" : framesSinceLast.ToString();
+        rows.Insert(0, $"{command}   <color=#A0A0A0>{frames}</color>");
+        if (rows.Count > maxRows) rows.RemoveAt(rows.Count - 1);
+        framesSinceLast = 0;
+        text.text = string.Join("\n", rows);
     }
 }

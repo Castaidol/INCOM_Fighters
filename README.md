@@ -1,80 +1,128 @@
-# INCOM Fighters — Sessione 6
+# INCOM Fighters — Sessione 7
 
-**Obiettivo:** ogni colpo si deve sentire. All'impatto player e manichino si fermano per qualche frame (hitstop), la camera trema, nel punto d'impatto compaiono le scintille e si sente un suono, diverso per colpo leggero, colpo pesante e parata. Sotto la barra del manichino il contatore mostra i colpi e il danno della combo e poi svanisce; quando il manichino para compare la scritta PARATO. Se avanza tempo, a sinistra l'input display mostra gli ultimi comandi con i frame passati tra l'uno e l'altro.
+**Obiettivo:** il gioco diventa un eseguibile da far provare ai compagni. Start o Esc apre un menu di pausa che ferma tutto: con il joypad, le frecce o il mouse scegli come si comporta il manichino, cambi la sua vita, accendi le hitbox, ricominci o esci. Accanto alle opzioni c'è la lista delle combo, generata leggendo gli AttackData. Le hitbox si vedono anche nella build, come cubi trasparenti. A fine lezione fai provare il gioco a un compagno e correggi i bug che trova.
 
 ## Da dove parti
 
-- **Hai finito la sessione 5 nel tuo progetto:** importa `INCOM_Fighters/Pacchetti/Sessione6.unitypackage` (Assets > Import Package > Custom Package…, importa tutto). Aggiunge `HitStop.cs` e `HitFeedback.cs` (in `Scripts/Feedback`) e `InputDisplay.cs` (in `Scripts/UI`), tutti con i TODO, i suoni in `Audio` e gli effetti in `Prefabs/FX`. Le modifiche agli altri script le scrivi tu, seguendo le istruzioni qui sotto. Se preferisci, copia `TrainingHUD.cs` da questo branch: contiene la soluzione della sessione 5 con i campi nuovi e i TODO di questa sessione.
-- **Sei rimasto indietro:** usa questo branch. Contiene la soluzione della sessione 5 e trovi già i TODO in tutti gli script da modificare.
+- **Hai finito la sessione 6 nel tuo progetto:** importa `INCOM_Fighters/Pacchetti/Sessione7.unitypackage` (Assets > Import Package > Custom Package…, importa tutto). Aggiunge `TrainingMenu.cs` e `ComboList.cs` (in `Scripts/UI`) e `HitboxViewer.cs` (in `Scripts/Training`), tutti con i TODO. Le modifiche agli altri script le scrivi tu, seguendo le istruzioni qui sotto.
+- **Sei rimasto indietro:** usa questo branch. Contiene la soluzione della sessione 6 e trovi già i TODO in tutti gli script da modificare.
 
 ## Cosa trovi già pronto
 
-- Tre suoni in `Assets/_Project/Audio`: `Pugno_Leggero`, `Pugno_Pesante` e `Parata`.
-- Due effetti in `Assets/_Project/Prefabs/FX`: `FX_Colpo` (scintille) e `FX_Parata` (energia azzurra). Sono varianti degli effetti Synty senza loop: una sola esplosione e poi più niente.
-- Nei tre script nuovi i campi e i metodi da completare. In questo branch anche il campo `shakeDuration` e il metodo `Shake` della `FightCamera` e i campi del contatore e della scritta PARATO nel `TrainingHUD`. Cerca i commenti `TODO`: il numero corrisponde al passo qui sotto.
+- Nei tre script nuovi i campi e i metodi da completare. In `TrainingMenu` anche i nomi delle opzioni in italiano e `Next`, che passa al valore successivo di un enum.
+- Nel progetto c'è già quello che il menu usa: `ResetTraining` nel `TrainingManager`, le opzioni in `TrainingSettings`, l'albero delle combo negli AttackData e l'azione Pause (Start o Esc) nella mappa Fighter.
+- Cerca i commenti `TODO`: il numero corrisponde al passo qui sotto.
 
-Finché non completi il passo 2 il gioco funziona come alla fine della sessione 5. All'inizio la console mostra alcuni avvisi gialli per campi non ancora usati, che spariscono man mano che completi i TODO.
+Fai i passi nell'ordine: dopo il TODO 3a `FighterInput` cerca la mappa UI del passo 1 e, se non la trova, all'avvio dà errore. All'inizio la console mostra qualche avviso giallo per campi non ancora usati, che spariscono man mano che completi i TODO.
 
 ## Teoria in breve
 
-- **Game feel:** un colpo sembra pesante per tanti piccoli dettagli messi insieme: hitstop, tremolio, effetto e suono. Il danno da solo non si vede.
-- **Hitstop:** all'impatto attaccante e colpito si fermano per qualche frame, di più con i colpi pesanti. Si fermano tutti e due per lo stesso tempo, quindi il vantaggio in frame non cambia.
-- **Perché non `Time.timeScale = 0`:** fermerebbe tutto, anche camera, dissolvenze, particelle e, in futuro, il menu. Qui si fermano solo i combattenti: saltano il loro `FixedUpdate` e i loro Animator vanno a velocità 0.
-- **Un osservatore:** `HitFeedback` ascolta `Hitbox.OnContact` e il combattimento non sa che esiste. Se lo disattivi il gioco funziona lo stesso, solo "muto".
+- **Pausa:** `Time.timeScale = 0` ferma tutto: `FixedUpdate` non gira più, animazioni e particelle si fermano. `Update` invece continua, ed è per questo che il menu funziona. È il contrario dell'hitstop, dove si fermavano solo i combattenti.
+- **Action map:** una mappa per ogni situazione. Con il menu aperto la mappa Fighter si spegne e si accende la mappa UI: i pugni non arrivano al combattente.
+- **EventSystem:** sa quale pulsante è selezionato e gli manda i comandi, che l'`InputSystemUIInputModule` prende dalla mappa UI del giocatore. Con il joypad serve un pulsante già selezionato quando il menu si apre, altrimenti non sa da dove partire.
+- **Build:** quello che funziona nell'editor può non funzionare nell'eseguibile. I Gizmos non ci sono, `Application.Quit` funziona solo lì, uno shader cercato per nome nel codice può mancare. Per questo la build va provata davvero.
 
 ## Passi
 
-Dopo ogni **Verifica** prova in Play mode, cliccando nella Game view prima di usare la tastiera. Comportamento e vita del manichino si cambiano dall'Inspector dell'oggetto `Training`, anche durante il Play.
+Dopo ogni **Verifica** prova in Play mode, cliccando nella Game view prima di usare la tastiera.
 
-1. **Peso negli AttackData** (TODO 1). Aggiungi i campi `hitstop` e `hitSound`, poi impostali nei cinque asset di `Data/Attacks`:
+1. **Mappa UI.** Apri `Fighter.inputactions` e aggiungi la mappa `UI` con cinque azioni. Usa proprio questi nomi: l'EventSystem li cerca da solo.
 
-   | Asset | Hitstop | Hit Sound |
+   | Azione | Action Type e Control Type | Comandi |
    | --- | --- | --- |
-   | Jab | 5 | Pugno_Leggero |
-   | Cross | 6 | Pugno_Leggero |
-   | Hook | 8 | Pugno_Pesante |
-   | Straight | 9 | Pugno_Pesante |
-   | Uppercut | 11 | Pugno_Pesante |
+   | Navigate | Pass Through, Vector2 | Stick sinistro e croce del joypad; frecce e WASD con Add Up/Down/Left/Right Composite |
+   | Submit | Button | A (Croce), Invio, Spazio |
+   | Cancel | Button | B (Cerchio), Start, Esc |
+   | Point | Pass Through, Vector2 | Mouse: Position |
+   | Click | Pass Through, Button | Mouse: Left Button |
 
-2. **Hitstop.**
-   - Nella scena crea un oggetto vuoto `Feedback` con i componenti `HitStop` e `HitFeedback`. Unity aggiunge da solo un `AudioSource`: togli la spunta a Play On Awake.
-   - In `HitStop` completa i TODO 2a–2c. Nella lista Animators dell'Inspector metti due elementi: l'Animator del player e quello del manichino, che stanno sui modelli dentro `Player` e `Dummy`.
-   - In `HitFeedback` completa i TODO 2d–2e e collega Player Hitbox (l'oggetto `Player`), Hit Stop (`Feedback`) e Fight Camera (`Main Camera`).
-   - In `FighterCombat` (TODO 2f), `TrainingDummy` (TODO 2g) e `FighterInput` (TODO 2h) aggiungi il campo `hitStop` e il controllo in `FixedUpdate`. Poi trascina `Feedback` nel campo Hit Stop dei tre componenti, su `Player` e su `Dummy`.
-   - **Verifica:** con un Jab player e manichino si fermano un attimo all'impatto. J J J fanno ancora Jab → Cross → Hook e in Console compare «Combo 3 colpi – 22 danni». Con «Para sempre» si ferma anche il colpo parato.
-3. **Tremolio della camera.**
-   - In `FightCamera` completa i TODO 3a–3c. Se lavori sul tuo progetto, aggiungi prima, sotto un `[Header("Tremolio")]`, il campo `[SerializeField] float shakeDuration = 0.2f` e il metodo vuoto `public void Shake(float strength)`.
-   - In `HitFeedback` (TODO 3d) fai partire il tremolio.
-   - **Verifica:** a ogni colpo la camera trema, meno quando il colpo è parato. Il tremolio continua anche mentre i combattenti sono fermi, poi la camera torna a seguirli come prima, senza scivolare.
-4. **Effetti d'impatto.**
-   - In `Hitbox` (TODO 4a) la proprietà `Center`, il punto d'impatto.
-   - In `HitFeedback` (TODO 4b) crea l'effetto. Nell'Inspector metti `FX_Colpo` in Hit Effect e `FX_Parata` in Block Effect.
-   - **Verifica:** a ogni colpo compaiono le scintille sul pugno, in parata l'effetto azzurro. Nella Hierarchy le copie degli effetti spariscono dopo un secondo. Con il manichino KO (vita «Normale») i colpi non hanno effetti.
-5. **Suoni.**
-   - In `HitFeedback` (TODO 5) suona la clip giusta. Nell'Inspector metti `Parata` in Block Sound; i suoni dei colpi li hai già messi negli asset al passo 1.
-   - **Verifica:** Jab e Cross hanno un suono secco, Hook, Straight e Uppercut un tonfo, la parata un "toc". Se non senti niente, controlla che nella barra della Game view non sia attivo Mute Audio.
-6. **Contatore combo e PARATO.**
-   - In `ComboTracker` (TODO 6a) l'evento `OnComboChanged`.
-   - Nel Canvas `HUD` crea due oggetti vuoti (tasto destro su `HUD` > Create Empty) con il componente `CanvasGroup`, tutti e due con Anchor Presets in alto a destra con Shift:
-     - `Combo`: Pos X −60, Pos Y −130, Width 640, Height 120;
-     - `Parato`: Pos X −60, Pos Y −260, Width 640, Height 70.
-   - Dentro ognuno metti un Text (UI > Legacy > Text) che lo riempie tutto (Anchor Presets con Alt, l'ultimo in basso a destra), grassetto, allineato in alto a destra, con Rich Text attivo e Horizontal e Vertical Overflow su Overflow. In `Combo` font 56 e colore giallo; in `Parato` font 48, colore azzurro e testo «PARATO». Un componente `Shadow` li rende più leggibili.
-   - Nel `TrainingHUD` completa i TODO 6b–6e. Se lavori sul tuo progetto, aggiungi prima i campi copiandoli da `TrainingHUD.cs` di questo branch: le intestazioni Contatore combo, Scritta PARATO e Dissolvenza e i campi privati `comboRunning`, `comboTimer` e `blockedTimer`.
-   - Nell'Inspector del `TrainingHUD` collega Combo Tracker (`Dummy`), Combo Group (`Combo`), Combo Text (il Text dentro `Combo`) e Blocked Group (`Parato`).
-   - **Verifica:** all'avvio contatore e PARATO non si vedono. Con J J J compaiono «2 COLPI» e poi «3 COLPI» con sotto «22 danni», che restano un secondo dopo la fine della combo e poi svaniscono in mezzo secondo. Con «Para sempre» ogni colpo parato fa comparire PARATO.
-7. **Input display (facoltativo).**
-   - In `FighterInput` (TODO 7a) l'evento `OnAttackPressed`.
-   - Nel Canvas `HUD` crea un'Image `InputDisplay` (Anchor Presets in basso a sinistra con Shift, Pos X 40, Pos Y 160, Width 160, Height 330, Source Image Bianco, colore scuro semitrasparente) e dentro un Text che la riempie, font 26, grassetto, allineato in alto a sinistra, con Rich Text attivo.
-   - Aggiungi all'Image il componente `InputDisplay`, completa i TODO 7b–7d e collega Input e Movement (`Player`), Hit Stop (`Feedback`) e Text.
-   - **Verifica:** camminando e tirando pugni compaiono le righe (→ avanti, ← indietro, · fermo, L leggero, H pesante), la più recente in alto, con in grigio i frame passati dal comando precedente. Con J J veloci leggi quanti frame passano tra le due pressioni.
+   - Ogni comando di tastiera e mouse va nello schema Keyboard, ogni comando del joypad nello schema Gamepad.
+   - Modifica lo schema Keyboard (menu degli schemi in alto a sinistra > Edit Control Scheme) e aggiungi il Mouse come dispositivo facoltativo (Optional).
+   - Salva con Save Asset.
+2. **EventSystem.**
+   - GameObject > UI > Event System. Nell'`InputSystemUIInputModule` metti `Fighter` in Actions Asset: le azioni con lo stesso nome si collegano da sole. Controlla che Move sia UI/Navigate e Left Click sia UI/Click; quelle che non esistono restano vuote.
+   - Nel `PlayerInput` del `Player` trascina l'EventSystem in UI Input Module: così il menu usa le azioni del giocatore.
+   - Aggiungi un `GraphicRaycaster` al Canvas `HUD`: serve al mouse.
+   - **Verifica:** nessun errore in Console e il gioco funziona come prima.
+3. **FighterInput: pausa e cambio di mappa** (TODO 3a–3d).
+   - Le azioni nuove Pause e Cancel (3a). In `Start` la mappa UI si spegne, perché il modulo dell'EventSystem la accende da solo (3b).
+   - Un solo segnale apre e chiude il menu: in gioco lo dà Pause, nel menu Cancel (3c).
+   - `ConsumePause` e `SetMenuMode`, che cambia mappa e svuota il buffer (3d).
+   - **Verifica:** nessun errore e il gioco funziona come prima: il menu ancora non c'è.
+4. **Menu di pausa.**
+   - In `TrainingSettings` l'opzione `showHitboxes` (TODO 4a).
+   - Nel Canvas `HUD`, in fondo alla lista così sta sopra a tutto, crea un oggetto vuoto `Menu` che riempie lo schermo (Anchor Presets con Alt, l'ultimo in basso a destra) e aggiungigli `TrainingMenu`.
+   - Dentro `Menu` un'Image `Pannello` che riempie lo schermo, Source Image Bianco, nera al 60%.
+   - Dentro `Pannello` un'Image `Opzioni`: Pos X −330, Pos Y 0, Width 780, Height 640, Source Image Bianco, colore scuro. Dentro:
+     - un Text (UI > Legacy > Text) `Titolo` in alto, «PAUSA», font 48, grassetto;
+     - un oggetto vuoto `Pulsanti` (Pos Y −40, Width 700, Height 480) con un Vertical Layout Group: Spacing 12, Control Child Size su Width e Height, Child Force Expand solo su Width.
+   - Dentro `Pulsanti` un Button (UI > Legacy > Button):
+     - Source Image Bianco, Normal Color scuro e Selected Color blu ben visibile;
+     - Navigation Vertical con Wrap Around;
+     - un Layout Element con Preferred Height 66;
+     - il Text dentro con font 28, grassetto, bianco, allineato a sinistra.
+   - Duplicalo (Ctrl+D) fino ad avere sei pulsanti e cambia nomi e testi: Riprendi, Comportamento, Vita, Hitbox, Ricomincia, Esci.
+   - OnClick (trascina `Menu` e scegli il metodo di `TrainingMenu`): Riprendi → `Close`, Comportamento → `CycleBehavior`, Vita → `CycleHealth`, Hitbox → `ToggleHitboxes`, Ricomincia → `Restart`, Esci → `Quit`.
+   - Nel `TrainingMenu` collega Player Input (`Player`), Settings e Manager (`Training`), Panel (`Pannello`), First Button (Riprendi) e i Text dei pulsanti Comportamento, Vita e Hitbox. Poi spegni `Pannello` nella scena.
+   - Completa i TODO 4b–4f.
+   - **Verifica:**
+     - Esc apre il menu con Riprendi selezionato e il gioco si ferma.
+     - Frecce e Invio cambiano i valori; dopo l'ultimo valore si torna al primo. Funziona anche il mouse.
+     - Un J premuto nel menu non fa partire un pugno quando il gioco riparte.
+     - Esc chiude il menu, Ricomincia rimette tutto a posto, Esci ferma il Play.
+5. **Lista delle combo.**
+   - In `FighterCombat` le proprietà `LightAttack` e `HeavyAttack` (TODO 5a).
+   - Dentro `Pannello` un'altra Image `ListaCombo`: Pos X 420, Pos Y 0, Width 560, Height 640, Source Image Bianco, colore scuro. Dentro:
+     - il titolo «LISTA COMBO»;
+     - una legenda in grigio, font 22: «L  pugno leggero: X / Quadrato, tasto J» e, sotto, «H  pugno pesante: Y / Triangolo, tasto K»;
+     - un Text `Lista` sotto la legenda, font 30, allineato in alto a sinistra, con Rich Text attivo.
+   - Aggiungi `ComboList` a `Menu`, che resta acceso anche a menu chiuso, e collega Player (`Player`) e Text (`Lista`). Completa i TODO 5b–5c.
+   - **Verifica:** il menu mostra tre combo: L L L (Jab → Cross → Hook, 22 danni), L L H (Jab → Cross → Uppercut, 27 danni) e H H (Straight → Uppercut, 27 danni).
+6. **Hitbox visibili in build.**
+   - In `Hitbox` le proprietà `IsActive` e `Size` (TODO 6a), in `Hurtbox` la proprietà `Bounds` (TODO 6b).
+   - In `Assets/_Project/Materials` crea due materiali (Create > Material), tutti e due con Shader Universal Render Pipeline/Unlit e Surface Type Transparent:
+     - `Hitbox`: Base Map rossa con alpha circa 45%;
+     - `Hurtbox`: Base Map azzurra con alpha circa 30%.
+   - Aggiungi `HitboxViewer` a `Training` e collega:
+     - Settings (`Training`);
+     - Hitboxes, con un elemento: `Player`;
+     - Hurtboxes, con un elemento: la `Hurtbox` dentro `Dummy`;
+     - Cube: la mesh Cube, che trovi nel selettore;
+     - i due materiali.
+   - Completa i TODO 6c–6d.
+   - **Verifica:** con Hitbox: Sì la hurtbox azzurra si vede sempre e la hitbox rossa compare sul pugno nei frame attivi. Con Hitbox: No non si vede niente.
+7. **Build.**
+   - File > Build Profiles, piattaforma Windows. Nella Scene List lascia solo `Arena`: togli SampleScene.
+   - Player Settings: Product Name «INCOM Fighters»; in Resolution and Presentation, Fullscreen Mode Fullscreen Window e Default Screen Width e Height 1920 e 1080.
+   - Build nella cartella `INCOM_Fighters/Build/Windows`, che git ignora. La prima build dura qualche minuto. Se compaiono molti avvisi gialli sugli shader (ConvGeneric), vengono da un pacchetto del progetto, non dal tuo codice.
+   - **Verifica:** nell'eseguibile funzionano menu, lista delle combo e hitbox (azzurre e rosse, non rosa), ed Esci chiude il gioco.
+8. **Playtest a coppie.** Uno gioca con la build dell'altro, l'altro osserva e scrive senza suggerire; poi vi scambiate. Prima i compiti, poi gioco libero.
+
+   **Compiti**
+
+   - [ ] Apri il menu con Start (o Esc), metti Comportamento su «Para sempre» e verifica che il manichino pari.
+   - [ ] Fai L L L: il contatore deve dire 3 colpi e 22 danni.
+   - [ ] Con la vita «Normale» manda KO il manichino e aspetta che si rialzi.
+   - [ ] Accendi le hitbox e scopri quale pugno arriva più lontano.
+   - [ ] Trova il colpo che in parata è a −8 e prova a colpire di nuovo prima che il manichino torni libero.
+   - [ ] Apri il menu nel mezzo di una combo e chiudilo: il gioco riparte da dove era e nessun pugno parte da solo?
+   - [ ] Ricomincia ed Esci funzionano? Il joypad funziona ovunque, menu compreso?
+
+   **Modulo per i bug** (una riga per bug)
+
+   | Cosa ho fatto | Cosa mi aspettavo | Cosa è successo | Succede sempre? | Gravità |
+   | --- | --- | --- | --- | --- |
+   | Esempio: aperto il menu subito dopo un colpo | La camera ferma dietro al menu | La camera vibra | Sì, se il colpo è appena andato a segno | Estetico |
+
+   Il bug dell'esempio è vero, prova a farlo comparire anche tu. Il tremolio della camera calcola a ogni frame uno spostamento casuale. Con `Time.timeScale = 0` il tempo non scorre e il tremolio non finisce mai. La correzione è il TODO 8 in `FightCamera`. Poi correggi i bug che hanno trovato i tuoi compagni, dal più grave.
 
 ## Sfide
 
-- **Peso proporzionale:** tremolio e hitstop che crescono con il danno del colpo invece di valori fissi.
-- **Colpo a vuoto:** un suono quando un attacco non tocca niente, con l'evento `OnWhiff` della sessione 5 (per esempio `Pugno_Leggero` con il `pitch` più alto).
-- **KO spettacolare:** il colpo che manda KO il manichino ha un hitstop lungo (per esempio 20 frame) e un tremolio forte.
-- **Pool di effetti:** riusa pochi effetti già creati invece di crearne e distruggerne uno a ogni colpo.
+- **Pushbox visibili:** l'`HitboxViewer` disegna anche le pushbox, in giallo.
+- **Altre righe nel menu:** «Input display: Sì/No» e «Buffer: 8 frame», che scorre tra 4, 8 e 12.
+- **Tasti veri nella lista:** la legenda mostra i comandi letti dall'Input System con `GetBindingDisplayString`, diversi per joypad e tastiera.
+- **Valori con sinistra e destra:** le righe delle opzioni cambiano valore con le frecce sinistra e destra invece che con Invio.
 
 ## Fine sessione
 
-Fai il commit del progetto funzionante.
+Fai il commit del progetto funzionante. Il progetto è finito: tieni la build per mostrarla.

@@ -50,7 +50,8 @@ public class TrainingHUD : MonoBehaviour
         player.OnAttackStarted += ShowAttack;
         player.OnWhiff += ShowWhiff;
         playerHitbox.OnContact += ShowContact;
-        // TODO 6b (sessione 6): iscriviti a comboTracker.OnComboChanged (ShowCombo) e a comboTracker.OnComboEnded (EndCombo).
+        comboTracker.OnComboChanged += ShowCombo;
+        comboTracker.OnComboEnded += EndCombo;
     }
 
     void OnDisable()
@@ -59,7 +60,8 @@ public class TrainingHUD : MonoBehaviour
         player.OnAttackStarted -= ShowAttack;
         player.OnWhiff -= ShowWhiff;
         playerHitbox.OnContact -= ShowContact;
-        // TODO 6b: togli le due iscrizioni.
+        comboTracker.OnComboChanged -= ShowCombo;
+        comboTracker.OnComboEnded -= EndCombo;
     }
 
     void Start()
@@ -69,31 +71,39 @@ public class TrainingHUD : MonoBehaviour
         frameDataText.text = "Tira un pugno per vedere i suoi frame data";
         resultText.text = "";
 
-        // TODO 6c: contatore e PARATO partono già svaniti: comboTimer e blockedTimer valgono holdSeconds + fadeSeconds
-        //   e l'alpha dei due CanvasGroup è 0.
+        // Contatore e PARATO partono già svaniti.
+        comboTimer = blockedTimer = holdSeconds + fadeSeconds;
+        comboGroup.alpha = 0f;
+        blockedGroup.alpha = 0f;
     }
 
-    // TODO 6d: aggiungi Update. Le dissolvenze usano il tempo normale (Time.deltaTime), così l'hitstop non le ferma.
-    //   Se la combo non è in corso, comboTimer aumenta e comboGroup.alpha = FadeOut(comboTimer).
-    //   blockedTimer aumenta sempre e blockedGroup.alpha = FadeOut(blockedTimer).
+    void Update()
+    {
+        // Le dissolvenze usano il tempo normale: l'hitstop non le ferma.
+        if (!comboRunning)
+        {
+            comboTimer += Time.deltaTime;
+            comboGroup.alpha = FadeOut(comboTimer);
+        }
+        blockedTimer += Time.deltaTime;
+        blockedGroup.alpha = FadeOut(blockedTimer);
+    }
 
     /// <summary>1 per holdSeconds secondi, poi scende a 0 in fadeSeconds secondi.</summary>
-    float FadeOut(float seconds)
-    {
-        // TODO 6d: restituisci 1 meno quanto è avanzata la dissolvenza: (seconds - holdSeconds) / fadeSeconds,
-        //   tenuto tra 0 e 1 con Mathf.Clamp01. Prima di holdSeconds vale 1, dopo holdSeconds + fadeSeconds vale 0.
-        return 1f;
-    }
+    float FadeOut(float seconds) => 1f - Mathf.Clamp01((seconds - holdSeconds) / fadeSeconds);
 
     void ShowCombo(int hits, int damage)
     {
-        // TODO 6e: la combo è in corso: comboRunning vero, comboGroup.alpha a 1 e in comboText i colpi e,
-        //   su una seconda riga più piccola, il danno: $"{hits} COLPI\n<size=30>{damage} danni</size>".
+        comboRunning = true;
+        comboGroup.alpha = 1f;
+        comboText.text = $"{hits} COLPI\n<size=30>{damage} danni</size>";
     }
 
     void EndCombo(int hits, int damage)
     {
-        // TODO 6e: la combo è finita: comboRunning falso e comboTimer a 0. Il contatore resta ancora un attimo, poi svanisce.
+        // La combo è finita: il contatore resta ancora un attimo, poi svanisce.
+        comboRunning = false;
+        comboTimer = 0f;
     }
 
     void ShowDummyHealth(int current, int max)
@@ -119,7 +129,7 @@ public class TrainingHUD : MonoBehaviour
             HitResult.Blocked => "<color=#6FB7FF>PARATO</color>",
             _ => "<color=#A0A0A0>IGNORATO</color>",
         };
-        // TODO 6e: se il colpo è parato azzera blockedTimer: la scritta PARATO riappare piena.
+        if (result == HitResult.Blocked) blockedTimer = 0f; // la scritta PARATO riappare piena
     }
 
     void ShowWhiff(AttackData attack)

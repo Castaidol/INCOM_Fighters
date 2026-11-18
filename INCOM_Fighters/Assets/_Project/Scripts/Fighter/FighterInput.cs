@@ -8,6 +8,7 @@ public enum AttackButton { None, Light, Heavy }
 /// Unico script del gioco che conosce l'Input System.
 /// Legge la action map "Fighter" dal PlayerInput e la traduce in comandi semplici:
 /// gli altri componenti li usano senza sapere se arrivano da joypad, tastiera o (in futuro) da un'IA.
+/// Con il menu di pausa aperto il PlayerInput passa alla mappa "UI", che muove i pulsanti tramite l'EventSystem.
 /// </summary>
 // Il buffer invecchia prima che FighterCombat lo legga: ogni pugno resta valido esattamente bufferFrames frame.
 [DefaultExecutionOrder(-20)]
@@ -20,13 +21,15 @@ public class FighterInput : MonoBehaviour
     [Tooltip("Per quanti frame (60 al secondo) un pugno premuto resta valido.")]
     [SerializeField, Range(1, 20)] int bufferFrames = 8;
 
-    // TODO 2h (sessione 6): un campo [SerializeField] HitStop hitStop, con il Tooltip
-    //   "Durante l'hitstop il buffer non invecchia: il pugno premuto resta valido per quando il gioco riparte."
+    [Tooltip("Durante l'hitstop il buffer non invecchia: il pugno premuto resta valido per quando il gioco riparte.")]
+    [SerializeField] HitStop hitStop;
 
     InputAction moveAction;
     InputAction lightAction;
     InputAction heavyAction;
     InputAction resetAction;
+    // TODO 3a (sessione 7): due azioni nuove, InputAction pauseAction (mappa Fighter: Start o Esc apre il menu)
+    //   e InputAction cancelAction (mappa UI: B, Start o Esc lo chiude), più i campi PlayerInput playerInput e bool menuMode.
 
     // Input buffer: un solo posto. L'ultimo pugno premuto sostituisce il precedente
     // e resta valido per bufferFrames frame, finché FighterCombat non lo usa.
@@ -42,8 +45,8 @@ public class FighterInput : MonoBehaviour
     /// <summary>Ultimo pugno premuto e non ancora usato (None se il buffer è vuoto o è scaduto).</summary>
     public AttackButton BufferedButton => buffered;
 
-    // TODO 7a (facoltativo): un evento pubblico OnAttackPressed di tipo System.Action<AttackButton>:
-    //   è stato premuto un pugno (lo usa l'input display). Si lancia in Buffer.
+    /// <summary>È stato premuto un pugno (per l'input display).</summary>
+    public event System.Action<AttackButton> OnAttackPressed;
 
     void Awake()
     {
@@ -53,7 +56,12 @@ public class FighterInput : MonoBehaviour
         lightAction = actions.FindAction("LightPunch", throwIfNotFound: true);
         heavyAction = actions.FindAction("HeavyPunch", throwIfNotFound: true);
         resetAction = actions.FindAction("Reset", throwIfNotFound: true);
+        // TODO 3a: salva il PlayerInput in playerInput e cerca le due azioni nuove con il nome della mappa davanti:
+        //   actions.FindAction("Fighter/Pause", throwIfNotFound: true) e actions.FindAction("UI/Cancel", throwIfNotFound: true).
     }
+
+    // TODO 3b: aggiungi Start. L'InputSystemUIInputModule accende da solo la mappa UI, ma in gioco deve restare spenta
+    //   finché non si apre il menu: cancelAction.actionMap.Disable().
 
     void Update()
     {
@@ -66,13 +74,17 @@ public class FighterInput : MonoBehaviour
         if (lightAction.WasPressedThisFrame()) Buffer(AttackButton.Light);
         if (heavyAction.WasPressedThisFrame()) Buffer(AttackButton.Heavy);
         if (resetAction.WasPressedThisFrame()) resetQueued = true;
+
+        // TODO 3c: un solo segnale apre e chiude il menu. Aggiungi un campo bool pauseQueued, come resetQueued.
+        //   Qui, con il menu aperto (menuMode) guarda cancelAction, altrimenti pauseAction:
+        //   se è stata premuta in questo frame, pauseQueued = true.
     }
 
     void FixedUpdate()
     {
         // Un FixedUpdate è un frame: il pugno nel buffer invecchia di uno e dopo bufferFrames scade.
         if (buffered == AttackButton.None) return;
-        // TODO 2h: durante l'hitstop (hitStop non null e IsFrozen vero) esci: il pugno nel buffer non invecchia.
+        if (hitStop != null && hitStop.IsFrozen) return;
         bufferAge++;
         if (bufferAge > bufferFrames) buffered = AttackButton.None;
     }
@@ -81,7 +93,7 @@ public class FighterInput : MonoBehaviour
     {
         buffered = button;
         bufferAge = 0;
-        // TODO 7a: lancia OnAttackPressed con il tasto premuto.
+        OnAttackPressed?.Invoke(button);
     }
 
     /// <summary>Svuota il buffer: chi ha usato il pugno lo chiama, così vale una volta sola.</summary>
@@ -97,4 +109,10 @@ public class FighterInput : MonoBehaviour
         resetQueued = false;
         return pressed;
     }
+
+    // TODO 3d: due metodi pubblici.
+    //   bool ConsumePause(): come ConsumeReset, ma con pauseQueued.
+    //   void SetMenuMode(bool open): salva open in menuMode e cambia mappa con playerInput.SwitchCurrentActionMap,
+    //   "UI" con il menu aperto e "Fighter" con il menu chiuso. Poi svuota il buffer (ConsumeBuffer), rimetti resetQueued
+    //   a falso e Horizontal a 0: un pugno o un reset premuti prima della pausa non devono partire alla ripresa.
 }

@@ -25,16 +25,21 @@ public class FightCamera : MonoBehaviour
     [SerializeField] float shakeDuration = 0.2f;
 
     Vector3 velocity;
+    Vector3 basePosition; // posizione senza tremolio: è questa che segue i combattenti
+    float shakeStrength;
+    float shakeTimeLeft;
 
-    // TODO 3a (sessione 6): tre campi privati: Vector3 basePosition, la posizione senza tremolio (è questa che segue
-    //   i combattenti), float shakeStrength e float shakeTimeLeft.
-    //   Aggiungi Awake: basePosition parte dalla posizione attuale della camera.
+    void Awake()
+    {
+        basePosition = transform.position;
+    }
 
     /// <summary>Fa tremare la camera di "strength" metri; il tremolio si smorza in shakeDuration secondi.</summary>
     public void Shake(float strength)
     {
-        // TODO 3b: shakeStrength = strength e shakeTimeLeft = shakeDuration.
-        //   (Facoltativo: se è ancora in corso un tremolio più forte, non indebolirlo.)
+        float current = shakeTimeLeft > 0f ? shakeStrength * shakeTimeLeft / shakeDuration : 0f;
+        shakeStrength = Mathf.Max(strength, current);
+        shakeTimeLeft = shakeDuration;
     }
 
     void LateUpdate()
@@ -49,11 +54,19 @@ public class FightCamera : MonoBehaviour
         float distance = Mathf.Lerp(minDistance, maxDistance, t);
 
         Vector3 target = new Vector3(midX, height, -distance);
-        // TODO 3c: lo SmoothDamp deve muovere basePosition, non la camera.
-        //   Poi, se shakeTimeLeft è maggiore di 0, scalalo di Time.deltaTime (il tremolio va in tempo reale e continua
-        //   durante l'hitstop) e calcola fade = Mathf.Clamp01(shakeTimeLeft / shakeDuration), che scende da 1 a 0.
-        //   Lo spostamento è (Vector3)(Random.insideUnitCircle * (shakeStrength * fade)); senza tremolio è zero.
-        //   La camera va in basePosition + spostamento.
-        transform.position = Vector3.SmoothDamp(transform.position, target, ref velocity, smoothTime);
+        basePosition = Vector3.SmoothDamp(basePosition, target, ref velocity, smoothTime);
+
+        // Il tremolio gira in tempo reale: continua anche durante l'hitstop, che ferma solo i combattenti.
+        // TODO 8 (sessione 7, dopo il playtest): in pausa Time.deltaTime è 0 e shakeTimeLeft non scende più, ma questo
+        //   blocco calcola lo stesso uno spostamento casuale a ogni frame: la camera vibra dietro al menu.
+        //   Fai partire il tremolio solo se anche Time.deltaTime è maggiore di 0.
+        Vector3 offset = Vector3.zero;
+        if (shakeTimeLeft > 0f)
+        {
+            shakeTimeLeft -= Time.deltaTime;
+            float fade = Mathf.Clamp01(shakeTimeLeft / shakeDuration);
+            offset = (Vector3)(Random.insideUnitCircle * (shakeStrength * fade));
+        }
+        transform.position = basePosition + offset;
     }
 }
